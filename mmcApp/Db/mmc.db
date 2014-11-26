@@ -1,0 +1,46 @@
+record(mmc, "$(CTRL)") {
+  field(PORT, "$(PORT)")
+  field(ASYN, "$(ASYN)")
+  field(NAXS, "$(NAXS)")
+}
+
+record(calcout, "$(CTRL):CheckUpdateClk") {
+  field(DESC, "Check Update Clock")
+  field(INPA, "$(CTRL):CheckUpdateClk")
+  field(OUT,  "$(CTRL):CheckUpdateEvt.PROC")
+  field(CALC, "(A+1)%6")
+  field(OCAL, "1")
+  field(OOPT, "When Zero")
+  field(DOPT, "Use OCAL")
+  field(SCAN, "10 second")
+}
+
+record(event, "$(CTRL):CheckUpdateEvt") {
+  field(DESC, "Check Update Event Generator")
+  field(VAL,  "9")
+  field(SCAN, "Passive")
+  field(FLNK, "$(CTRL):CheckUpdate:TS")
+}
+
+record(stringin, "$(CTRL):CheckUpdate:TS") {
+  field(DESC, "Time Stamp of Last Check")
+  field(DTYP, "Soft Timestamp")
+  field(TSEL, "$(CTRL):CheckUpdateEvt.TIME")
+  field(INP,  "@%b %d %R:%S %Y")
+  field(FLNK, "$(CTRL):CheckUpdate:UTCS")
+}
+
+record(stringin, "$(CTRL):CheckUpdate:UTCS") {
+  field(DESC, "UTC String of Last Check")
+  field(DTYP, "Soft Timestamp")
+  field(TSEL, "$(CTRL):CheckUpdateEvt.TIME")
+  field(INP,  "@%s")
+  field(FLNK, "$(CTRL):CheckUpdate:UTC")
+}
+
+record(scalcout, "$(CTRL):CheckUpdate:UTC") {
+  field(DESC, "UTC Seconds of Last Check")
+  field(INAA, "$(CTRL):CheckUpdate:UTCS")
+  field(CALC, "INT(AA)")
+}
+

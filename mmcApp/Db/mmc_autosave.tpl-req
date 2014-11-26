@@ -1,0 +1,5 @@
+# MMC controller autosave list
+$(MOTOR).PORT
+$(MOTOR).ASYN
+$(MOTOR).NAXS
+

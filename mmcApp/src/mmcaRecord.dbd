@@ -1,0 +1,546 @@
+include "menuYesNo.dbd"
+
+menu(mmcaAble) {
+	choice(mmcaAble_Disable, "Disable"      )
+	choice(mmcaAble_Enable,  "Enable"       )
+}
+menu(mmcaEAD) {
+	choice(mmcaEAD_Digital,  "Digital"      )
+	choice(mmcaEAD_Analog,   "Analog"       )
+}
+menu(mmcaEPL) {
+	choice(mmcaEPL_Normal,   "Normal"       )
+	choice(mmcaEPL_Reverse,  "Reverse"      )
+}
+menu(mmcaFBK) {
+	choice(mmcaFBK_Open0,    "Open, Accurate" )
+	choice(mmcaFBK_Open1,    "Open, Cleaner"  )
+	choice(mmcaFBK_Closed2,  "Closed, Cleaner")
+	choice(mmcaFBK_Closed3,  "Closed, Trapez" )
+}
+menu(mmcaLCG) {
+	choice(mmcaLCG_Ignore,   "Ignore"       )
+	choice(mmcaLCG_Active,   "Activate"     )
+}
+menu(mmcaLPL) {
+	choice(mmcaLPL_Low,      "Active Low"   )
+	choice(mmcaLPL_High,     "Active High"  )
+}
+menu(mmcHTYP) {
+        choice(mmcHTYP_None,     "N/A"          )
+        choice(mmcHTYP_Limits,   "Limits"       )
+        choice(mmcHTYP_Stall,    "Stall"        )
+}
+menu(mmcaHCG) {
+	choice(mmcaHCG_Negative, "Negative"     )
+	choice(mmcaHCG_Positive, "Positive"     )
+}
+menu(mmcaDIR) {
+	choice(mmcaDIR_Positive, "Pos"          )
+	choice(mmcaDIR_Negative, "Neg"          )
+}
+menu(mmcaSET) {
+	choice(mmcaSET_Use,      "Use"          )
+	choice(mmcaSET_Set,      "Set"          )
+}
+menu(mmcaSPG) {
+	choice(mmcaSPG_Stop,     "Stop"         )
+	choice(mmcaSPG_Pause,    "Pause"        )
+	choice(mmcaSPG_Go,       "Go"           )
+}
+
+recordtype(mmca) {
+	include "dbCommon.dbd" 
+	field(VERS,DBF_FLOAT) {
+		prompt("Software Version")
+		special(SPC_NOMOD)
+		initial(1)
+	}
+	field(HOST,DBF_STRING) {
+		prompt("Name of Host Machine")
+		special(SPC_NOMOD)
+		size(61)
+		interest(1)
+	}
+	field(IOCN,DBF_STRING) {
+		prompt("Linux Name of IOC")
+		special(SPC_NOMOD)
+		size(61)
+		interest(1)
+	}
+	field(AXIS,DBF_SHORT) {
+		prompt("Axis Index")
+		interest(1)
+	}
+	field(FVER,DBF_STRING) {
+		prompt("Firmware Version")
+		size(61)
+		special(SPC_NOMOD)
+		interest(1)
+	}
+	field(EAD,DBF_MENU) {
+		prompt("Encoder Mode")
+		promptgroup(GUI_COMMON)
+		menu(mmcaEAD)
+		special(SPC_MOD)
+		asl(ASL0)
+		initial("Digital")
+		interest(1)
+	}
+	field(EPL,DBF_MENU) {
+		prompt("Encoder Polarity")
+		promptgroup(GUI_COMMON)
+		menu(mmcaEPL)
+		special(SPC_MOD)
+		asl(ASL0)
+		initial("Normal")
+		interest(1)
+	}
+	field(FBK,DBF_MENU) {
+		prompt("Feedback Mode")
+		promptgroup(GUI_COMMON)
+		menu(mmcaFBK)
+		special(SPC_MOD)
+		asl(ASL0)
+		initial(0)
+		interest(1)
+	}
+	field(LCG,DBF_MENU) {
+		prompt("Ignore/Activate Limit Switches")
+		promptgroup(GUI_COMMON)
+		menu(mmcaLCG)
+		special(SPC_MOD)
+		asl(ASL0)
+		initial("Activate")
+		interest(1)
+	}
+	field(LDR,DBF_MENU) {
+		prompt("Limit Switch Direction")
+		promptgroup(GUI_COMMON)
+		menu(mmcaEPL)
+		special(SPC_MOD)
+		asl(ASL0)
+		initial("Normal")
+		interest(1)
+	}
+	field(LPL,DBF_MENU) {
+		prompt("Limit Switch Polarity")
+		promptgroup(GUI_COMMON)
+		menu(mmcaLPL)
+		special(SPC_MOD)
+		asl(ASL0)
+		initial(0)
+		interest(1)
+	}
+	field(MPL,DBF_MENU) {
+		prompt("Motor Polarity")
+		promptgroup(GUI_COMMON)
+		menu(mmcaEPL)
+		special(SPC_MOD)
+		asl(ASL0)
+		initial("Normal")
+		interest(1)
+	}
+	field(REZ,DBF_ULONG) {
+		prompt("Steps / um, milli-deg")
+		promptgroup(GUI_COMMON)
+		special(SPC_MOD)
+		initial(8000)
+		interest(1)
+	}
+	field(STA,DBF_USHORT) {
+		prompt("Status Byte")
+		special(SPC_NOMOD)
+		interest(1)
+	}
+	field(EGU,DBF_STRING) {
+		prompt("Engineering Units")
+		promptgroup(GUI_COMMON)
+		size(16)
+		initial("um")
+		interest(1)
+	}
+	field(ERES,DBF_DOUBLE) {
+		prompt("Encoder Resolution (EGU)")
+		special(SPC_MOD)
+		initial(0.05)
+		interest(1)
+	}
+	field(DIR,DBF_MENU) {
+		prompt("User Direction")
+		promptgroup(GUI_COMMON)
+		menu(mmcaDIR)
+		special(SPC_MOD)
+		initial("Pos")
+		interest(1)
+	}
+	field(OFF,DBF_DOUBLE) {
+		prompt("User Offset (EGU)")
+		special(SPC_MOD)
+		asl(ASL0)
+	}
+	field(SET,DBF_MENU) {
+		prompt("Set/Use Switch")
+		menu(mmcaSET)
+		special(SPC_MOD)
+		asl(ASL0)
+		interest(1)
+	}
+	field(HTYP,DBF_MENU) {
+		prompt("Homing Type")
+		promptgroup(GUI_COMMON)
+		menu(mmcHTYP)
+		initial("N/A")
+		interest(1)
+	}
+	field(HEGE,DBF_MENU) {
+		prompt("Homing Edge")
+		promptgroup(GUI_COMMON)
+		menu(mmcaDIR)
+		initial("Pos")
+		interest(1)
+	}
+	field(DLLM,DBF_DOUBLE) {
+		prompt("Dial Low Limit (EGU)")
+		promptgroup(GUI_COMMON)
+		special(SPC_MOD)
+		initial(-999.999)
+	}
+	field(DHLM,DBF_DOUBLE) {
+		prompt("Dial High Limit (EGU)")
+		promptgroup(GUI_COMMON)
+		special(SPC_MOD)
+		initial(999.999)
+	}
+	field(LLM,DBF_DOUBLE) {
+		prompt("User Low Limit (EGU)")
+		special(SPC_MOD)
+		initial(-9000)
+	}
+	field(HLM,DBF_DOUBLE) {
+		prompt("User High Limit (EGU)")
+		special(SPC_MOD)
+		initial(9000)
+	}
+	field(RDBD,DBF_DOUBLE) {
+		prompt("Retry/Closed Loop Deadband (EGU)")
+		promptgroup(GUI_COMMON)
+		initial(0.1)
+		interest(1)
+	}
+	field(RTRY,DBF_SHORT) {
+		prompt("Max No of Retries")
+		promptgroup(GUI_COMMON)
+		initial(3)
+		interest(1)
+	}
+	field(RCNT,DBF_SHORT) {
+		prompt("Retry Count")
+		special(SPC_NOMOD)
+		interest(2)
+	}
+	field(MISS,DBF_SHORT) {
+		prompt("Hit or Miss")
+		special(SPC_NOMOD)
+		interest(2)
+	}
+	field(PDBD,DBF_DOUBLE) {
+		prompt("Position Tolerance (EGU)")
+		initial(0.5)
+		interest(1)
+	}
+	field(PREC,DBF_SHORT) {
+		prompt("Display Precision")
+		promptgroup(GUI_COMMON)
+		interest(1)
+	}
+	field(AMAX,DBF_FLOAT) {
+		prompt("Max Ac/Deceleration")
+		promptgroup(GUI_COMMON)
+		special(SPC_MOD)
+		initial(100)
+		interest(1)
+	}
+	field(ACCL,DBF_FLOAT) {
+		prompt("Ac/Deceleration")
+		promptgroup(GUI_COMMON)
+		special(SPC_MOD)
+		initial(100)
+		interest(1)
+	}
+	field(VMAX,DBF_FLOAT) {
+		prompt("Max Velocity (EGU/s)")
+		promptgroup(GUI_COMMON)
+		special(SPC_MOD)
+		initial(2)
+		interest(1)
+	}
+	field(VELO,DBF_FLOAT) {
+		prompt("Velocity (EGU/s)")
+		promptgroup(GUI_COMMON)
+		special(SPC_MOD)
+		initial(2)
+		interest(1)
+	}
+	field(VRT,DBF_FLOAT) {
+		prompt("Encoder Velocity (EGU/s)")
+		special(SPC_NOMOD)
+		interest(1)
+	}
+	field(JACC,DBF_FLOAT) {
+		prompt("Jogging Ac/Deceleration")
+		promptgroup(GUI_COMMON)
+		special(SPC_MOD)
+		initial(100)
+		interest(1)
+	}
+	field(JFRA,DBF_FLOAT) {
+		prompt("% of VMAX for Jogging")
+		promptgroup(GUI_COMMON)
+		special(SPC_MOD)
+		initial(25)
+		interest(1)
+	}
+	field(ATHM,DBF_SHORT) {
+		prompt("At HOME")
+		special(SPC_NOMOD)
+	}
+	field(VAL,DBF_DOUBLE) {
+		prompt("User Desired Value (EGU)")
+		special(SPC_MOD)
+		asl(ASL0)
+	}
+	field(DVAL,DBF_DOUBLE) {
+		prompt("Dial Desired Value (EGU)")
+		special(SPC_MOD)
+		asl(ASL0)
+	}
+	field(RVAL,DBF_LONG) {
+		prompt("Raw Desired Value (step)")
+		special(SPC_NOMOD)
+	}
+	field(TWV,DBF_DOUBLE) {
+		prompt("Tweak Amount (EGU)")
+		promptgroup(GUI_COMMON)
+		asl(ASL0)
+		initial(3)
+		interest(1)
+	}
+	field(TWF,DBF_SHORT) {
+		prompt("Tweak Motor Forward")
+		special(SPC_MOD)
+		asl(ASL0)
+	}
+	field(TWR,DBF_SHORT) {
+		prompt("Tweak Motor Reverse")
+		special(SPC_MOD)
+		asl(ASL0)
+	}
+	field(LVIO,DBF_SHORT) {
+		prompt("Limit Violation")
+		special(SPC_NOMOD)
+		initial(1)
+	}
+	field(JOGF,DBF_SHORT) {
+		prompt("Jog Forward")
+		special(SPC_MOD)
+		asl(ASL0)
+	}
+	field(JOGR,DBF_SHORT) {
+		prompt("Jog Backward")
+		special(SPC_MOD)
+		asl(ASL0)
+	}
+	field(MLP,DBF_SHORT) {
+		prompt("Move to Positive Limit")
+		special(SPC_MOD)
+		asl(ASL0)
+	}
+	field(MLN,DBF_SHORT) {
+		prompt("Move to Negative Limit")
+		special(SPC_MOD)
+		asl(ASL0)
+	}
+	field(HOMD,DBF_DOUBLE) {
+		prompt("Dial Position For Home")
+		promptgroup(GUI_COMMON)
+		interest(1)
+	}
+	field(HOMF,DBF_SHORT) {
+		prompt("Home Forward")
+		special(SPC_MOD)
+		interest(1)
+	}
+	field(HOMR,DBF_SHORT) {
+		prompt("Home Reverse")
+		special(SPC_MOD)
+		interest(1)
+	}
+	field(SPG,DBF_MENU) {
+		prompt("Stop/Pause/Go")
+		menu(mmcaSPG)
+		special(SPC_MOD)
+		asl(ASL0)
+		initial(2)
+		interest(1)
+	}
+	field(STOP,DBF_SHORT) {
+		prompt("Single Stop")
+		special(SPC_MOD)
+		asl(ASL0)
+	}
+	field(ESTP,DBF_SHORT) {
+		prompt("Emergency Stop")
+		special(SPC_MOD)
+		asl(ASL0)
+	}
+	field(SDS,DBF_USHORT) {
+		prompt("Stall Detection Delay (s)")
+		initial(2)
+		asl(ASL0)
+	}
+	field(MSEC,DBF_ULONG) {
+		prompt("UTC of Last Moving")
+		special(SPC_NOMOD)
+	}
+	field(MIP,DBF_USHORT) {
+		prompt("Motion In Progress")
+		special(SPC_NOMOD)
+		interest(3)
+	}
+	field(MOVN,DBF_SHORT) {
+		prompt("Moving or Not")
+		special(SPC_NOMOD)
+	}
+	field(DMOV,DBF_SHORT) {
+		prompt("Done Moving to Position")
+		promptgroup(GUI_COMMON)
+		special(SPC_NOMOD)
+		initial(1)
+	}
+	field(RRBV,DBF_LONG) {
+		prompt("Encoder Readback Value")
+		special(SPC_NOMOD)
+	}
+	field(DRBV,DBF_DOUBLE) {
+		prompt("Dial Readback Value")
+		special(SPC_NOMOD)
+	}
+	field(RBV,DBF_DOUBLE) {
+		prompt("User Readback Value")
+		special(SPC_NOMOD)
+	}
+	field(DIFF,DBF_DOUBLE) {
+		prompt("Difference rbv-val")
+		special(SPC_NOMOD)
+	}
+	field(RLLS,DBF_SHORT) {
+		prompt("Raw Low Limit Switch")
+		special(SPC_NOMOD)
+	}
+	field(RHLS,DBF_SHORT) {
+		prompt("Raw High Limit Switch")
+		special(SPC_NOMOD)
+	}
+	field(LLS,DBF_SHORT) {
+		prompt("User Low Limit Switch")
+		special(SPC_NOMOD)
+	}
+	field(HLS,DBF_SHORT) {
+		prompt("User High Limit Switch")
+		special(SPC_NOMOD)
+	}
+	field(HLSV,DBF_MENU) {
+		prompt("HW Limit Violation Svr")
+		promptgroup(GUI_COMMON)
+		menu(menuAlarmSevr)
+		interest(2)
+	}
+	field(MSTA,DBF_ULONG) {
+		prompt("Motor Status")
+		special(SPC_NOMOD)
+		interest(3)
+	}
+	field(OVAL,DBF_DOUBLE) {
+		prompt("Original Value")
+		promptgroup(GUI_COMMON)
+		special(SPC_NOMOD)
+	}
+	field(CMAP,DBF_ULONG) {
+		prompt("Bit Map of Changed Field")
+		promptgroup(GUI_COMMON)
+		special(SPC_NOMOD)
+		initial(0)
+	}
+	field(STUP,DBF_SHORT) {
+		prompt("Update Status")
+		special(SPC_MOD)
+		asl(ASL0)
+	}
+	field(CMD,DBF_STRING) {
+		prompt("Command To Controller")
+		promptgroup(GUI_COMMON)
+		size(61)
+		special(SPC_MOD)
+		asl(ASL0)
+		interest(1)
+	}
+	field(RESP,DBF_STRING) {
+		prompt("Response From Controller")
+		promptgroup(GUI_COMMON)
+		size(61)
+		special(SPC_NOMOD)
+		interest(1)
+	}
+	field(RINI,DBF_SHORT) {
+		prompt("Re-initialize")
+		special(SPC_MOD)
+	}
+	field(DLVL,DBF_SHORT) {
+		prompt("Debugging Level")
+		promptgroup(GUI_COMMON)
+		interest(1)
+		initial(0)
+	}
+	field(LOGA,DBF_NOACCESS) {
+		prompt("Log Message A")
+		special(SPC_DBADDR)
+		extra("char *loga")
+	}
+	field(LOGB,DBF_NOACCESS) {
+		prompt("Log Message B")
+		special(SPC_DBADDR)
+		extra("char *logb")
+	}
+	field(LOGC,DBF_NOACCESS) {
+		prompt("Log Message C")
+		special(SPC_DBADDR)
+		extra("char *logc")
+	}
+	field(LOGD,DBF_NOACCESS) {
+		prompt("Log Message D")
+		special(SPC_DBADDR)
+		extra("char *logd")
+	}
+	field(LOGE,DBF_NOACCESS) {
+		prompt("Log Message E")
+		special(SPC_DBADDR)
+		extra("char *loge")
+	}
+	field(LOGF,DBF_NOACCESS) {
+		prompt("Log Message F")
+		special(SPC_DBADDR)
+		extra("char *logf")
+	}
+	field(LOGG,DBF_NOACCESS) {
+		prompt("Log Message G")
+		special(SPC_DBADDR)
+		extra("char *logg")
+	}
+	field(LOGH,DBF_NOACCESS) {
+		prompt("Log Message H")
+		special(SPC_DBADDR)
+		extra("char *logh")
+	}
+}
+

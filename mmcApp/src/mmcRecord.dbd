@@ -1,0 +1,20 @@
+recordtype(mmc) {
+	include "dbCommon.dbd" 
+	field(PORT,DBF_STRING) {
+		prompt("Ethernet Port")
+		size(61)
+		interest(1)
+	}
+	field(ASYN,DBF_STRING) {
+		prompt("Asyn Tag")
+		size(61)
+		special(SPC_NOMOD)
+		interest(1)
+	}
+	field(NAXS,DBF_SHORT) {
+		prompt("Number Of Axes")
+		special(SPC_NOMOD)
+		interest(1)
+	}
+}
+
