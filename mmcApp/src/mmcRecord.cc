@@ -238,8 +238,10 @@ static void handle_cmd( asynUser *pasynUser, char *cmd, list<int> &moving_new )
                 mmcRsp[axis-1]->send( rpl, strlen(rpl) );
             }
 
-            if ( (strncmp(cmd+coff, "MV", 2) == 0) ||
-                 (strncmp(cmd+coff, "ML", 2) == 0)    )
+            if ( (strncmp(cmd+coff, "MV",  2) == 0) ||
+                 (strncmp(cmd+coff, "ML",  2) == 0) ||
+                 (strncmp(cmd+coff, "JOG", 3) == 0) ||
+                 (strncmp(cmd+coff, "HOM", 3) == 0)    )
                 moving_new.push_back( axis );
         }
     }
@@ -271,14 +273,17 @@ static void serial_io( asynUser *pasynUser )
                 handle_cmd( pasynUser, cmd, moving_new );
             }
 
-            mlen = mmcCmd->receive( cmd, MAX_MSG_SIZE );
-            if ( mlen > 0 )
+            if ( moving_new.size() == 0 )                        // no new moves
             {
-                cmd[mlen] = '\0';
-                handle_cmd( pasynUser, cmd, moving_new );
+                mlen = mmcCmd->receive( cmd, MAX_MSG_SIZE );
+                if ( mlen > 0 )
+                {
+                    cmd[mlen] = '\0';
+                    handle_cmd( pasynUser, cmd, moving_new );
+                }
+                else 
+                    printf( "Bad command\n" );
             }
-            else 
-                printf( "Bad command\n" );
         }
         else
         {

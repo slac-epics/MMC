@@ -28,8 +28,8 @@ menu(mmcaLPL) {
 }
 menu(mmcHTYP) {
         choice(mmcHTYP_None,     "N/A"          )
+        choice(mmcHTYP_Encoder,  "E Mark"       )
         choice(mmcHTYP_Limits,   "Limits"       )
-        choice(mmcHTYP_Stall,    "Stall"        )
 }
 menu(mmcaHCG) {
 	choice(mmcaHCG_Negative, "Negative"     )
@@ -193,13 +193,6 @@ recordtype(mmca) {
 		initial("N/A")
 		interest(1)
 	}
-	field(HEGE,DBF_MENU) {
-		prompt("Homing Edge")
-		promptgroup(GUI_COMMON)
-		menu(mmcaDIR)
-		initial("Pos")
-		interest(1)
-	}
 	field(DLLM,DBF_DOUBLE) {
 		prompt("Dial Low Limit (EGU)")
 		promptgroup(GUI_COMMON)
@@ -215,15 +208,27 @@ recordtype(mmca) {
 	field(LLM,DBF_DOUBLE) {
 		prompt("User Low Limit (EGU)")
 		special(SPC_MOD)
-		initial(-9000)
 	}
 	field(HLM,DBF_DOUBLE) {
 		prompt("User High Limit (EGU)")
 		special(SPC_MOD)
-		initial(9000)
+	}
+	field(DBD,DBF_USHORT) {
+		prompt("Closed Loop Deadband (Counts)")
+		promptgroup(GUI_COMMON)
+		special(SPC_MOD)
+		initial(10)
+		interest(1)
+	}
+	field(DBDT,DBF_FLOAT) {
+		prompt("Closed Loop Deadband Timeout (Seconds)")
+		promptgroup(GUI_COMMON)
+		special(SPC_MOD)
+		initial(1)
+		interest(1)
 	}
 	field(RDBD,DBF_DOUBLE) {
-		prompt("Retry/Closed Loop Deadband (EGU)")
+		prompt("Retry Deadband (EGU)")
 		promptgroup(GUI_COMMON)
 		initial(0.1)
 		interest(1)
@@ -270,9 +275,7 @@ recordtype(mmca) {
 	}
 	field(VMAX,DBF_FLOAT) {
 		prompt("Max Velocity (EGU/s)")
-		promptgroup(GUI_COMMON)
-		special(SPC_MOD)
-		initial(2)
+		special(SPC_NOMOD)
 		interest(1)
 	}
 	field(VELO,DBF_FLOAT) {
@@ -362,7 +365,7 @@ recordtype(mmca) {
 		asl(ASL0)
 	}
 	field(HOMD,DBF_DOUBLE) {
-		prompt("Dial Position For Home")
+		prompt("Position For Home")
 		promptgroup(GUI_COMMON)
 		interest(1)
 	}
