@@ -239,7 +239,7 @@ static long init_axis( mmcaRecord *prec )
     clen = sprintf( cmd, "%dLPL%d",   prec->axis, prec->lpl  );
     mmcCmd->send( cmd, clen );
 
-    clen = sprintf( cmd, "%dMPL%d",   prec->axis, prec->mpl  );
+    clen = sprintf( cmd, "%dMPL%d",   prec->axis, prec->dir  );
     mmcCmd->send( cmd, clen );
 
     clen = sprintf( cmd, "%dREZ%d",   prec->axis, prec->rez  );
@@ -303,13 +303,13 @@ static long process( dbCommon *precord )
     unsigned short   old_mip,  alarm_mask;
     short            old_movn, old_dmov, old_rcnt, old_miss;
     double           old_val,  old_dval, old_drbv, old_rbv, old_diff, diff;
-    long             old_rval, old_rrbv, old_velo, status = OK;
+    long             old_rval, status = OK;
     mmc_status       old_sta,  sta;
     motor_status     old_msta, msta;
     float            old_vrt;
     timespec         ts;
     int              clen;
-    bool             first;
+    bool             first = FALSE;
 
     if ( prec->pact ) return( OK );
 
@@ -378,7 +378,7 @@ static long process( dbCommon *precord )
     prec->vrt            = mInfo->vrt;
     if ( prec->fbk < mmcaFBK_Closed2 ) prec->drbv = mInfo->tpos;
     else                               prec->drbv = mInfo->epos;
-    prec->rbv  = prec->drbv * (1. - 2.*prec->dir) + prec->off;
+    prec->rbv  = prec->drbv + prec->off;
 
     if ( old_sta.All != prec->sta  ) MARK( M_STA  );
     if ( old_vrt     != prec->vrt  ) MARK( M_VRT  );
@@ -395,6 +395,8 @@ static long process( dbCommon *precord )
 
         msta.Bits.NOT_INIT = 0;
         log_msg( prec, 0, "Initialization completed" );
+
+        first = TRUE;
     }
 
     mInfo->newData = 0;
@@ -403,7 +405,8 @@ static long process( dbCommon *precord )
     prec->movn = msta.Bits.RA_MOVING = 1 - sta.Bits.RA_STOPPED;
     if ( old_movn != prec->movn ) MARK( M_MOVN );
 
-    if ( (prec->movn || old_movn) && (prec->sds > 0) && (prec->mip & MIP_HOME == 0) )
+    if ( (prec->movn || old_movn) && (prec->sds > 0) &&
+         ((prec->mip & MIP_HOME) == 0) )
     {                                                         // check for stall
         clock_gettime( CLOCK_REALTIME, &ts );
         if ( old_movn == 0 )                                         // new move
@@ -606,11 +609,9 @@ static long process( dbCommon *precord )
 static void new_move( mmcaRecord *prec )
 {
     char  cmd[MAX_MSG_SIZE];
-    int   clen, udir, mdir, ldir;
+    int   clen, mdir;
 
-    udir = (prec->dir == mmcaDIR_Positive) ? 1 : -1;
-    mdir = (prec->mpl == mmcaEPL_Normal  ) ? 1 : -1;
-    ldir = (prec->ldr == mmcaEPL_Normal  ) ? 1 : -1;
+    mdir = (prec->dir == mmcaDIR_Positive) ? 1 : -1;
 
     prec->dmov = 0;
 
@@ -619,8 +620,8 @@ static void new_move( mmcaRecord *prec )
         log_msg( prec, 0, "Move to positive limit" );
 
         prec->mip  = MIP_MLP ;
-        if ( udir*mdir*ldir == 1 ) clen = sprintf( cmd, "%dMLP", prec->axis );
-        else                       clen = sprintf( cmd, "%dMLN", prec->axis );
+        if ( mdir == 1 ) clen = sprintf( cmd, "%dMLP", prec->axis );
+        else             clen = sprintf( cmd, "%dMLN", prec->axis );
         mmcCmd->send( cmd, clen );
     }
     else if ( prec->mip & MIP_MLN )
@@ -628,8 +629,8 @@ static void new_move( mmcaRecord *prec )
         log_msg( prec, 0, "Move to negative limit" );
 
         prec->mip  = MIP_MLN ;
-        if ( udir*mdir*ldir == 1 ) clen = sprintf( cmd, "%dMLN", prec->axis );
-        else                       clen = sprintf( cmd, "%dMLP", prec->axis );
+        if ( mdir == 1 ) clen = sprintf( cmd, "%dMLN", prec->axis );
+        else             clen = sprintf( cmd, "%dMLP", prec->axis );
         mmcCmd->send( cmd, clen );
     }
     else
@@ -667,7 +668,7 @@ static long special( dbAddr *pDbAddr, int after )
     unsigned short   old_mip, alarm_mask = 0;
     motor_status     msta;
 
-    int              clen, udir, mdir, ldir;
+    int              clen, mdir;
     int              fieldIndex = dbGetFieldIndex( pDbAddr ), status = OK;
 
     if ( after == 0 )
@@ -695,7 +696,6 @@ static long special( dbAddr *pDbAddr, int after )
         else if ( fieldIndex == mmcaRecordLCG  ) prec->oval = prec->lcg ;
         else if ( fieldIndex == mmcaRecordLDR  ) prec->oval = prec->ldr ;
         else if ( fieldIndex == mmcaRecordLPL  ) prec->oval = prec->lpl ;
-        else if ( fieldIndex == mmcaRecordMPL  ) prec->oval = prec->mpl ;
         else if ( fieldIndex == mmcaRecordREZ  ) prec->oval = prec->rez ;
         else if ( fieldIndex == mmcaRecordDBD  ) prec->oval = prec->dbd ;
         else if ( fieldIndex == mmcaRecordDBDT ) prec->oval = prec->dbdt;
@@ -736,7 +736,7 @@ static long special( dbAddr *pDbAddr, int after )
                 break;
             }
 
-            new_dval = (prec->val - prec->off) * (1. - 2.*prec->dir);
+            new_dval = prec->val - prec->off;
             if ( (prec->val < prec->llm) || (prec->val > prec->hlm) )
             {                                    // violated the software limits
                 prec->lvio = 1;                     // set limit violation alarm
@@ -747,7 +747,7 @@ static long special( dbAddr *pDbAddr, int after )
             }
 
             do_move1:
-            if ( prec->set == mmcaSET_Use )          // do it only when "Use"
+            if ( prec->set == mmcaSET_Use )             // do it only when "Use"
                 prec->dval = new_dval;
 
             goto do_move2;
@@ -780,10 +780,10 @@ static long special( dbAddr *pDbAddr, int after )
                 break;
             }
 
-            prec->val  = prec->dval * (1. - 2.*prec->dir) + prec->off;
+            prec->val  = prec->dval + prec->off;
 
             do_move2:
-            if ( prec->set == mmcaSET_Set ) break;                 // no move
+            if ( prec->set == mmcaSET_Set ) break;                    // no move
 
             prec->lvio = 0;
             prec->rcnt = 0;
@@ -835,7 +835,7 @@ static long special( dbAddr *pDbAddr, int after )
                 break;
             }
 
-            new_dval = (nval - prec->off) * (1. - 2.*prec->dir);
+            new_dval = nval - prec->off;
             if ( (nval < prec->llm) || (nval > prec->hlm) )
             {                                    // violated the software limits
                 prec->lvio = 1;                     // set limit violation alarm
@@ -908,15 +908,14 @@ static long special( dbAddr *pDbAddr, int after )
 
             db_post_events( prec, &prec->athm, DBE_VAL_LOG );
 
-            udir = (prec->dir == mmcaDIR_Positive) ? 1 : -1;
-            mdir = (prec->mpl == mmcaEPL_Normal  ) ? 1 : -1;
+            mdir = (prec->dir == mmcaDIR_Positive) ? 1 : -1;
 
             prec->dmov = 0;
             if ( fieldIndex == mmcaRecordJOGF )
             {
                 prec->mip  = MIP_JOGF;
 
-                if ( udir*mdir == 1 )
+                if ( mdir == 1 )
                     clen = sprintf( cmd, "%dJOG%.3f", prec->axis,  prec->jfra );
                 else
                     clen = sprintf( cmd, "%dJOG%.3f", prec->axis, -prec->jfra );
@@ -927,7 +926,7 @@ static long special( dbAddr *pDbAddr, int after )
             {
                 prec->mip  = MIP_JOGR;
 
-                if ( udir*mdir == 1 )
+                if ( mdir == 1 )
                     clen = sprintf( cmd, "%dJOG%.3f", prec->axis, -prec->jfra );
                 else
                     clen = sprintf( cmd, "%dJOG%.3f", prec->axis,  prec->jfra );
@@ -1034,16 +1033,15 @@ static long special( dbAddr *pDbAddr, int after )
             if ( fieldIndex == mmcaRecordHOMF ) prec->mip  = MIP_HOMF;
             else                                prec->mip  = MIP_HOMR;
 
-            udir = (prec->dir == mmcaDIR_Positive) ? 1 : -1;
-            mdir = (prec->mpl == mmcaEPL_Normal  ) ? 1 : -1;
-            ldir = (prec->ldr == mmcaEPL_Normal  ) ? 1 : -1;
             if ( prec->htyp == mmcHTYP_Limits )
             {
+                mdir = (prec->dir == mmcaDIR_Positive) ? 1 : -1;
+
                 if ( fieldIndex == mmcaRecordHOMF )
                 {
                     log_msg( prec, 0, "Homing >> to HLS ..." );
 
-                    if ( udir*mdir*ldir == 1 )
+                    if ( mdir == 1 )
                         clen = sprintf( cmd, "%dMLP", prec->axis );
                     else
                         clen = sprintf( cmd, "%dMLN", prec->axis );
@@ -1052,7 +1050,7 @@ static long special( dbAddr *pDbAddr, int after )
                 {
                     log_msg( prec, 0, "Homing << to LLS ..." );
 
-                    if ( udir*mdir*ldir == 1 )
+                    if ( mdir == 1 )
                         clen = sprintf( cmd, "%dMLN", prec->axis );
                     else
                         clen = sprintf( cmd, "%dMLP", prec->axis );
@@ -1064,19 +1062,13 @@ static long special( dbAddr *pDbAddr, int after )
                 {
                     log_msg( prec, 0, "Homing >> to encoder mark ..." );
 
-                    if ( udir*mdir*ldir == 1 )
-                        clen = sprintf( cmd, "%dHCG1", prec->axis );
-                    else
-                        clen = sprintf( cmd, "%dHCG0", prec->axis );
+                    clen = sprintf( cmd, "%dHCG1", prec->axis );
                 }
                 else
                 {
                     log_msg( prec, 0, "Homing << to encoder mark ..." );
 
-                    if ( udir*mdir*ldir == 1 )
-                        clen = sprintf( cmd, "%dHCG0", prec->axis );
-                    else
-                        clen = sprintf( cmd, "%dHCG1", prec->axis );
+                    clen = sprintf( cmd, "%dHCG0", prec->axis );
                 }
 
                 mmcCmd->send( cmd, clen );
@@ -1191,6 +1183,9 @@ static long special( dbAddr *pDbAddr, int after )
                 db_post_events( prec, &prec->hls,  DBE_VAL_LOG );
             }
 
+            clen = sprintf( cmd, "%dMPL%d", prec->axis, prec->dir  );
+            mmcCmd->send( cmd, clen );
+
             goto change_dir_off;
         case ( mmcaRecordOFF  ):
             prec->llm += prec->off - prec->oval;
@@ -1200,15 +1195,12 @@ static long special( dbAddr *pDbAddr, int after )
             db_post_events( prec, &prec->llm,  DBE_VAL_LOG );
             db_post_events( prec, &prec->hlm,  DBE_VAL_LOG );
 
-            prec->rbv  = prec->drbv * (1. - 2.*prec->dir) + prec->off;
+            prec->rbv  = prec->drbv + prec->off;
             prec->val  = prec->rbv;
 
 //          check_software_limits( prec );
 
-            clen = sprintf( cmd, "%dSTUP",  prec->axis             );
-            mmcCmd->send( cmd, clen );
-
-            break;
+            goto stup;
         case mmcaRecordSET :
             if ( (prec->set == prec->oval ) ||
                  (prec->set == mmcaSET_Set)    ) break;
@@ -1499,8 +1491,7 @@ static long special( dbAddr *pDbAddr, int after )
                 clen = sprintf( cmd, "%dENC%.3f", prec->axis, prec->eres );
                 mmcCmd->send( cmd, clen );
 
-                clen = sprintf( cmd, "%dSTUP",  prec->axis             );
-                mmcCmd->send( cmd, clen );
+                goto stup;
             }
             else
             {
@@ -1536,13 +1527,6 @@ static long special( dbAddr *pDbAddr, int after )
             if ( prec->lpl  == prec->oval ) break;
 
             clen = sprintf( cmd, "%dLPL%d", prec->axis, prec->lpl  );
-            mmcCmd->send( cmd, clen );
-
-            goto stup;
-        case mmcaRecordMPL :
-            if ( prec->mpl  == prec->oval ) break;
-
-            clen = sprintf( cmd, "%dMPL%d", prec->axis, prec->mpl  );
             mmcCmd->send( cmd, clen );
 
             goto stup;

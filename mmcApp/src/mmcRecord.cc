@@ -186,19 +186,19 @@ static long read_status( asynUser *pasynUser, int axis )   // return status byte
 {
     char  cmd [MAX_MSG_SIZE];
     char  rsp1[MAX_MSG_SIZE], rsp2[MAX_MSG_SIZE], rsp3[MAX_MSG_SIZE];
-    int   mlen, sta;
+    int   clen, sta;
     long  status = 0;
 
     // read the status byte
-    mlen   = sprintf( cmd, "%dSTA?", axis );
+    clen   = sprintf( cmd, "%dSTA?", axis );
     status = send_n_recv( pasynUser, axis, cmd, rsp1 );
 
     // read the encoder velocity
-    mlen   = sprintf( cmd, "%dVRT?", axis );
+    clen   = sprintf( cmd, "%dVRT?", axis );
     status = send_n_recv( pasynUser, axis, cmd, rsp2 );
 
     // read the position
-    mlen   = sprintf( cmd, "%dPOS?", axis );
+    clen   = sprintf( cmd, "%dPOS?", axis );
     status = send_n_recv( pasynUser, axis, cmd, rsp3 );
 
     status = sscanf( rsp1, "#%d", &sta );
@@ -206,8 +206,8 @@ static long read_status( asynUser *pasynUser, int axis )   // return status byte
     // send info to the axis record
     if ( (strlen(rsp1) > 0) && (strlen(rsp2) > 0) && (strlen(rsp3) > 0) )
     {
-        mlen = sprintf( cmd, "%dSTA%s,VRT%s,POS%s", axis, rsp1, rsp2, rsp3 );
-        mmcRsp[axis-1]->send( cmd, mlen );
+        clen = sprintf( cmd, "%dSTA%s,VRT%s,POS%s", axis, rsp1, rsp2, rsp3 );
+        mmcRsp[axis-1]->send( cmd, clen );
     }
 
     return( sta );
@@ -217,7 +217,7 @@ static long read_status( asynUser *pasynUser, int axis )   // return status byte
 static void handle_cmd( asynUser *pasynUser, char *cmd, list<int> &moving_new )
 {
     char  rsp[MAX_MSG_SIZE], rpl[MAX_MSG_SIZE];
-    int   axis, coff, mlen;
+    int   axis, coff;
     long  status = OK;
 
     status = sscanf( cmd, "%d", &axis );
@@ -257,9 +257,8 @@ static void serial_io( asynUser *pasynUser )
     char                 cmd[MAX_MSG_SIZE];
     list<int>            moving, moving_new;
     list<int>::iterator  ia;
-    int                  mlen;
+    int                  clen;
     mmc_status           sta;
-    long                 status = OK;
 
     while ( ! interruptAccept ) epicsThreadSleep( 1 );
 
@@ -267,18 +266,18 @@ static void serial_io( asynUser *pasynUser )
     {
         if ( moving.size() == 0 )                           // no axis is moving
         {
-            while ( (mlen = mmcCmd->tryReceive(cmd, MAX_MSG_SIZE)) > 0 )
+            while ( (clen = mmcCmd->tryReceive(cmd, MAX_MSG_SIZE)) > 0 )
             {
-                cmd[mlen] = '\0';
+                cmd[clen] = '\0';
                 handle_cmd( pasynUser, cmd, moving_new );
             }
 
             if ( moving_new.size() == 0 )                        // no new moves
             {
-                mlen = mmcCmd->receive( cmd, MAX_MSG_SIZE );
-                if ( mlen > 0 )
+                clen = mmcCmd->receive( cmd, MAX_MSG_SIZE );
+                if ( clen > 0 )
                 {
-                    cmd[mlen] = '\0';
+                    cmd[clen] = '\0';
                     handle_cmd( pasynUser, cmd, moving_new );
                 }
                 else 
@@ -295,9 +294,9 @@ static void serial_io( asynUser *pasynUser )
                 if ( sta.Bits.RA_STOPPED ) ia = moving.erase( ia );   // stopped
                 else                       ia++;
 
-                while ( (mlen = mmcCmd->tryReceive(cmd, MAX_MSG_SIZE)) > 0 )
+                while ( (clen = mmcCmd->tryReceive(cmd, MAX_MSG_SIZE)) > 0 )
                 {
-                    cmd[mlen] = '\0';
+                    cmd[clen] = '\0';
                     handle_cmd( pasynUser, cmd, moving_new );
                 }
             }

@@ -132,15 +132,6 @@ recordtype(mmca) {
 		initial(0)
 		interest(1)
 	}
-	field(MPL,DBF_MENU) {
-		prompt("Motor Polarity")
-		promptgroup(GUI_COMMON)
-		menu(mmcaEPL)
-		special(SPC_MOD)
-		asl(ASL0)
-		initial("Normal")
-		interest(1)
-	}
 	field(REZ,DBF_ULONG) {
 		prompt("Steps / um, milli-deg")
 		promptgroup(GUI_COMMON)
@@ -157,13 +148,13 @@ recordtype(mmca) {
 		prompt("Engineering Units")
 		promptgroup(GUI_COMMON)
 		size(16)
-		initial("um")
+		initial("mm")
 		interest(1)
 	}
 	field(ERES,DBF_DOUBLE) {
 		prompt("Encoder Resolution (EGU)")
 		special(SPC_MOD)
-		initial(0.05)
+		initial(0.005)
 		interest(1)
 	}
 	field(DIR,DBF_MENU) {
