@@ -1186,6 +1186,12 @@ static long special( dbAddr *pDbAddr, int after )
             clen = sprintf( cmd, "%dMPL%d", prec->axis, prec->dir  );
             mmcCmd->send( cmd, clen );
 
+            prec->epl  = 1 - prec->epl ;
+            db_post_events( prec, &prec->epl,  DBE_VAL_LOG );
+
+            clen = sprintf( cmd, "%dEPL%d", prec->axis, prec->epl  );
+            mmcCmd->send( cmd, clen );
+
             goto change_dir_off;
         case ( mmcaRecordOFF  ):
             prec->llm += prec->off - prec->oval;

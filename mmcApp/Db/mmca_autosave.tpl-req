@@ -1,4 +1,4 @@
-# AMMC axis autosave list
+# MMC axis autosave list
 $(MOTOR).DESC
 $(MOTOR).AXIS
 $(MOTOR).EAD
