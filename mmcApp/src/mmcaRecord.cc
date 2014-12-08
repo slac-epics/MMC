@@ -468,10 +468,10 @@ static long process( dbCommon *precord )
         if      ( prec->mip & MIP_JOG   )
         {
             if ( prec->mip & MIP_STOP )
-                log_msg( prec, 0, "Stopped jogging at %.6g (DRBV: %.6g)"
+                log_msg( prec, 0, "Stopped jogging at %.6g (DRBV: %.6g)",
                                   prec->rbv, prec->drbv );
             else
-                log_msg( prec, 0, "Jogging stopped at %.6g (DRBV: %.6g)"
+                log_msg( prec, 0, "Jogging stopped at %.6g (DRBV: %.6g)",
                                   prec->rbv, prec->drbv );
 
             prec->miss = 0;
