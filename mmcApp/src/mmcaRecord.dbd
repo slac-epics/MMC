@@ -111,7 +111,7 @@ recordtype(mmca) {
 		menu(mmcaLCG)
 		special(SPC_MOD)
 		asl(ASL0)
-		initial("Activate")
+		initial("Ignore")
 		interest(1)
 	}
 	field(LDR,DBF_MENU) {
