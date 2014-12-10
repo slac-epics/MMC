@@ -226,8 +226,14 @@ static void handle_cmd( asynUser *pasynUser, char *cmd, list<int> &moving_new )
         if ( axis > 9 ) coff = 2;
         else            coff = 1;
 
-        if ( strncmp(cmd+coff, "STUP", 4) == 0 )
+        if      ( strncmp(cmd+coff, "STUP", 4) == 0 )
             status = read_status( pasynUser, axis );
+        else if ( strncmp(cmd+coff, "ERR?", 4) == 0 )
+        {
+            strncpy( rpl, cmd, strlen(cmd)-1 );
+            sprintf( rpl+strlen(cmd)-1, "#ERR command not supported" );
+            mmcRsp[axis-1]->send( rpl, strlen(rpl) );
+        }
         else
         {
             status = send_n_recv( pasynUser, axis, cmd, rsp );

@@ -347,6 +347,8 @@ static long process( dbCommon *precord )
         mInfo->newData = 0;
         mInfo->uMutex->unlock();
 
+        post_msgs( prec );
+
         goto exit;
     }
     else if ( mInfo->newData ==  8 )                       // response to a read
@@ -355,6 +357,8 @@ static long process( dbCommon *precord )
 
         mInfo->newData = 0;
         mInfo->uMutex->unlock();
+
+        post_msgs( prec );
 
         goto exit;
     }
@@ -1719,6 +1723,8 @@ static long update_field( struct mmca_info *mInfo )
             db_post_events( prec, &prec->vmax, DBE_VAL_LOG );
         }
     }
+    else if ( strncmp(mInfo->rsp+coff, "ERR", 3) == 0 )
+        log_msg( prec, 0, mInfo->rsp+coff+4 );
 
     return( 0 );
 }
