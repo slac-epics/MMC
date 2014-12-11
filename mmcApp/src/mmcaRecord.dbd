@@ -154,7 +154,7 @@ recordtype(mmca) {
 	field(ERES,DBF_DOUBLE) {
 		prompt("Encoder Resolution (EGU)")
 		special(SPC_MOD)
-		initial(0.005)
+		initial(0.000005)
 		interest(1)
 	}
 	field(DIR,DBF_MENU) {

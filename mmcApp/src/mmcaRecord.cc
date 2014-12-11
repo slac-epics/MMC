@@ -216,12 +216,12 @@ static long init_axis( mmcaRecord *prec )
 
     if ( prec->ead == mmcaEAD_Digital ) // set the digital encoder resolution
     {
-        clen = sprintf( cmd, "%dENC%.3f", prec->axis, prec->eres );
+        clen = sprintf( cmd, "%dENC%.3f", prec->axis, prec->eres*1000 );
         mmcCmd->send( cmd, clen );
     }
     else                                   // read the analog encoder resolution
     {
-        clen = sprintf( cmd, "%dENC?",    prec->axis             );
+        clen = sprintf( cmd, "%dENC?",    prec->axis                  );
         mmcCmd->send( cmd, clen );
     }
 
@@ -916,29 +916,19 @@ static long special( dbAddr *pDbAddr, int after )
 
             db_post_events( prec, &prec->athm, DBE_VAL_LOG );
 
-            mdir = (prec->dir == mmcaDIR_Positive) ? 1 : -1;
-
             prec->dmov = 0;
             if ( fieldIndex == mmcaRecordJOGF )
             {
                 prec->mip  = MIP_JOGF;
-
-                if ( mdir == 1 )
-                    clen = sprintf( cmd, "%dJOG%.3f", prec->axis,  prec->jfra );
-                else
-                    clen = sprintf( cmd, "%dJOG%.3f", prec->axis, -prec->jfra );
+                clen = sprintf( cmd, "%dJOG%.3f", prec->axis,  prec->jfra ); //jfra follows motor direction
 
                 log_msg( prec, 0, "Jogging forward ..."  );
             }
             else
             {
                 prec->mip  = MIP_JOGR;
-
-                if ( mdir == 1 )
-                    clen = sprintf( cmd, "%dJOG%.3f", prec->axis, -prec->jfra );
-                else
-                    clen = sprintf( cmd, "%dJOG%.3f", prec->axis,  prec->jfra );
-
+                clen = sprintf( cmd, "%dJOG%.3f", prec->axis, -prec->jfra );
+                
                 log_msg( prec, 0, "Jogging backward ..." );
             }
 
@@ -1502,7 +1492,7 @@ static long special( dbAddr *pDbAddr, int after )
 
             if ( prec->ead == mmcaEAD_Digital )
             {
-                clen = sprintf( cmd, "%dENC%.3f", prec->axis, prec->eres );
+                clen = sprintf( cmd, "%dENC%.3f", prec->axis, prec->eres*1000 );
                 mmcCmd->send( cmd, clen );
 
                 goto stup;
@@ -1710,7 +1700,7 @@ static long update_field( struct mmca_info *mInfo )
         status = sscanf( mInfo->rsp, "%dENC#%f", &axis, &eres );
         if ( status == 2 )
         {
-            prec->eres = eres;
+            prec->eres = eres / 1000;
             db_post_events( prec, &prec->eres, DBE_VAL_LOG );
         }
     }
