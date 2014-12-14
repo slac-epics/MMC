@@ -918,17 +918,17 @@ static long special( dbAddr *pDbAddr, int after )
 
             prec->dmov = 0;
             if ( fieldIndex == mmcaRecordJOGF )
-            {
+            {                      // Jogging has the same orientation as moving
                 prec->mip  = MIP_JOGF;
-                clen = sprintf( cmd, "%dJOG%.3f", prec->axis,  prec->jfra ); //jfra follows motor direction
 
+                clen = sprintf( cmd, "%dJOG%.3f", prec->axis,  prec->jfra );
                 log_msg( prec, 0, "Jogging forward ..."  );
             }
             else
             {
                 prec->mip  = MIP_JOGR;
+
                 clen = sprintf( cmd, "%dJOG%.3f", prec->axis, -prec->jfra );
-                
                 log_msg( prec, 0, "Jogging backward ..." );
             }
 
