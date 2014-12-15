@@ -1,5 +1,5 @@
 # MMC controller autosave list
-$(MOTOR).PORT
-$(MOTOR).ASYN
-$(MOTOR).NAXS
+$(CTRL).PORT
+$(CTRL).ASYN
+$(CTRL).NAXS
 
