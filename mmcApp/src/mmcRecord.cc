@@ -297,8 +297,11 @@ static void serial_io( asynUser *pasynUser )
             {
                 // read the status
                 sta.All = read_status( pasynUser, *ia );
-                if ( sta.Bits.RA_STOPPED ) ia = moving.erase( ia );   // stopped
-                else                       ia++;
+                if ( sta.Bits.RA_STOPPED        ||                    // stopped
+                     ((! sta.Bits.RA_DEC ) &&
+                      (! sta.Bits.RA_VELO) &&
+                      (! sta.Bits.RA_ACC )    )    ) ia = moving.erase( ia );
+                else                                 ia++;
 
                 while ( (clen = mmcCmd->tryReceive(cmd, MAX_MSG_SIZE)) > 0 )
                 {

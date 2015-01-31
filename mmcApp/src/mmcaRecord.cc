@@ -406,7 +406,12 @@ static long process( dbCommon *precord )
     mInfo->newData = 0;
     mInfo->uMutex->unlock();
 
-    prec->movn = msta.Bits.RA_MOVING = 1 - sta.Bits.RA_STOPPED;
+    if ( sta.Bits.RA_STOPPED        ||                                // stopped
+         ((! sta.Bits.RA_DEC ) &&
+          (! sta.Bits.RA_VELO) &&
+          (! sta.Bits.RA_ACC )    )    ) prec->movn = msta.Bits.RA_MOVING = 0;
+    else                                 prec->movn = msta.Bits.RA_MOVING = 1;
+ 
     if ( old_movn != prec->movn ) MARK( M_MOVN );
 
     if ( (prec->movn || old_movn) && (prec->sds > 0) &&
