@@ -11,7 +11,7 @@ EPICS_BASE=$(EPICS_SITE_TOP)/base/$(BASE_MODULE_VERSION)
 # ===============================================================
 # Define the version(s) of any other needed modules 
 # ===============================================================
-ASYN_MODULE_VERSION = R4.23-0.3.0
+ASYN_MODULE_VERSION = R4.23-0.4.0
 
 # ============================================================
 # External Support module path definitions
