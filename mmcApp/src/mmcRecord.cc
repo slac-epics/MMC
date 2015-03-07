@@ -153,7 +153,7 @@ static long send_n_recv( asynUser *pasynUser, int axis, char *cmd, char *rsp )
 
     if ( (strncmp(cmd+coff, "RST", 3) == 0) || (cmd[strlen(cmd)-1] == '?') )
     {                                                            // need to read
-        for ( it = 0; it < 60; it++ )
+        for ( it = 0; it < 3; it++ )
         {
             nread = 0;
             asyn_rtn = pasynOctetSyncIO->read( pasynUser, rsp, MAX_MSG_SIZE,
@@ -176,7 +176,7 @@ static long send_n_recv( asynUser *pasynUser, int axis, char *cmd, char *rsp )
         }
     }
 
-    epicsThreadSleep( 0.05 );
+    epicsThreadSleep( 0.2 );
 
     return( nread );
 }
@@ -201,14 +201,16 @@ static long read_status( asynUser *pasynUser, int axis )   // return status byte
     clen   = sprintf( cmd, "%dPOS?", axis );
     status = send_n_recv( pasynUser, axis, cmd, rsp3 );
 
-    status = sscanf( rsp1, "#%d", &sta );
-
     // send info to the axis record
     if ( (strlen(rsp1) > 0) && (strlen(rsp2) > 0) && (strlen(rsp3) > 0) )
     {
-        clen = sprintf( cmd, "%dSTA%s,VRT%s,POS%s", axis, rsp1, rsp2, rsp3 );
+        status = sscanf( rsp1, "#%d", &sta );
+
+        clen   = sprintf( cmd, "%dSTA%s,VRT%s,POS%s", axis, rsp1, rsp2, rsp3 );
         mmcRsp[axis-1]->send( cmd, clen );
     }
+    else
+        sta = -1;
 
     return( sta );
 }
@@ -297,11 +299,12 @@ static void serial_io( asynUser *pasynUser )
             {
                 // read the status
                 sta.All = read_status( pasynUser, *ia );
-                if ( sta.Bits.RA_STOPPED        ||                    // stopped
-                     ((! sta.Bits.RA_DEC ) &&
-                      (! sta.Bits.RA_VELO) &&
-                      (! sta.Bits.RA_ACC )    )    ) ia = moving.erase( ia );
-                else                                 ia++;
+                if ( (sta.All >= 0) &&
+                     (sta.Bits.RA_STOPPED        ||                   // stopped
+                      ((! sta.Bits.RA_DEC ) &&
+                       (! sta.Bits.RA_VELO) &&
+                       (! sta.Bits.RA_ACC )    )    ) ) ia = moving.erase( ia );
+                else                                    ia++;
 
                 while ( (clen = mmcCmd->tryReceive(cmd, MAX_MSG_SIZE)) > 0 )
                 {

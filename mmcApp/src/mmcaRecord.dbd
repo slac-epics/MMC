@@ -36,8 +36,8 @@ menu(mmcaHCG) {
 	choice(mmcaHCG_Positive, "Positive"     )
 }
 menu(mmcaDIR) {
-	choice(mmcaDIR_Positive, "Pos"          )
-	choice(mmcaDIR_Negative, "Neg"          )
+	choice(mmcaDIR_Positive, "Positive"     )
+	choice(mmcaDIR_Negative, "Negative"     )
 }
 menu(mmcaSET) {
 	choice(mmcaSET_Use,      "Use"          )
@@ -130,6 +130,15 @@ recordtype(mmca) {
 		special(SPC_MOD)
 		asl(ASL0)
 		initial(0)
+		interest(1)
+	}
+	field(MPL,DBF_MENU) {
+		prompt("Motor Polarity")
+		promptgroup(GUI_COMMON)
+		menu(mmcaEPL)
+		special(SPC_MOD)
+		asl(ASL0)
+		initial("Normal")
 		interest(1)
 	}
 	field(REZ,DBF_ULONG) {

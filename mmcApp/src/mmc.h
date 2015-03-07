@@ -3,7 +3,7 @@
 
 typedef union
 {
-    epicsUInt16 All;
+    epicsInt16 All;
     struct
     {
         unsigned int RA_LLS         :1; // 1=Active, 0=Not active

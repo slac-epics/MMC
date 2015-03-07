@@ -122,7 +122,7 @@ static long init_record( dbCommon *precord, int pass )
     mmcaRecord  *prec = (mmcaRecord *)precord;
     mmca_info   *mInfo;
 
-    long            status = 0;
+    long         status = 0;
 
     if ( pass == 0 ) return( status );
 
@@ -239,7 +239,7 @@ static long init_axis( mmcaRecord *prec )
     clen = sprintf( cmd, "%dLPL%d",   prec->axis, prec->lpl  );
     mmcCmd->send( cmd, clen );
 
-    clen = sprintf( cmd, "%dMPL%d",   prec->axis, prec->dir  );
+    clen = sprintf( cmd, "%dMPL%d",   prec->axis, prec->mpl  );
     mmcCmd->send( cmd, clen );
 
     clen = sprintf( cmd, "%dREZ%d",   prec->axis, prec->rez  );
@@ -382,7 +382,7 @@ static long process( dbCommon *precord )
     prec->vrt            = mInfo->vrt;
     if ( prec->fbk < mmcaFBK_Closed2 ) prec->drbv = mInfo->tpos;
     else                               prec->drbv = mInfo->epos;
-    prec->rbv  = prec->drbv + prec->off;
+    prec->rbv  = prec->drbv * (1 - 2*prec->dir) + prec->off;
 
     if ( old_sta.All != prec->sta  ) MARK( M_STA  );
     if ( old_vrt     != prec->vrt  ) MARK( M_VRT  );
@@ -709,6 +709,7 @@ static long special( dbAddr *pDbAddr, int after )
         else if ( fieldIndex == mmcaRecordLCG  ) prec->oval = prec->lcg ;
         else if ( fieldIndex == mmcaRecordLDR  ) prec->oval = prec->ldr ;
         else if ( fieldIndex == mmcaRecordLPL  ) prec->oval = prec->lpl ;
+        else if ( fieldIndex == mmcaRecordMPL  ) prec->oval = prec->mpl ;
         else if ( fieldIndex == mmcaRecordREZ  ) prec->oval = prec->rez ;
         else if ( fieldIndex == mmcaRecordDBD  ) prec->oval = prec->dbd ;
         else if ( fieldIndex == mmcaRecordDBDT ) prec->oval = prec->dbdt;
@@ -749,7 +750,7 @@ static long special( dbAddr *pDbAddr, int after )
                 break;
             }
 
-            new_dval = prec->val - prec->off;
+            new_dval = (prec->val - prec->off) * (1 - 2*prec->dir);
             if ( (prec->val < prec->llm) || (prec->val > prec->hlm) )
             {                                    // violated the software limits
                 prec->lvio = 1;                     // set limit violation alarm
@@ -793,7 +794,7 @@ static long special( dbAddr *pDbAddr, int after )
                 break;
             }
 
-            prec->val  = prec->dval + prec->off;
+            prec->val  = prec->dval * (1 - 2*prec->dir) + prec->off;
 
             do_move2:
             if ( prec->set == mmcaSET_Set ) break;                    // no move
@@ -848,7 +849,7 @@ static long special( dbAddr *pDbAddr, int after )
                 break;
             }
 
-            new_dval = nval - prec->off;
+            new_dval = (nval - prec->off) * (1 - 2*prec->dir);
             if ( (nval < prec->llm) || (nval > prec->hlm) )
             {                                    // violated the software limits
                 prec->lvio = 1;                     // set limit violation alarm
@@ -1036,10 +1037,10 @@ static long special( dbAddr *pDbAddr, int after )
             if ( fieldIndex == mmcaRecordHOMF ) prec->mip  = MIP_HOMF;
             else                                prec->mip  = MIP_HOMR;
 
+            mdir = (prec->dir == mmcaDIR_Positive) ? 1 : -1;
+
             if ( prec->htyp == mmcHTYP_Limits )
             {
-                mdir = (prec->dir == mmcaDIR_Positive) ? 1 : -1;
-
                 if ( fieldIndex == mmcaRecordHOMF )
                 {
                     log_msg( prec, 0, "Homing >> to HLS ..." );
@@ -1065,13 +1066,19 @@ static long special( dbAddr *pDbAddr, int after )
                 {
                     log_msg( prec, 0, "Homing >> to encoder mark ..." );
 
-                    clen = sprintf( cmd, "%dHCG1", prec->axis );
+                    if ( mdir == 1 )
+                        clen = sprintf( cmd, "%dHCG1", prec->axis );
+                    else
+                        clen = sprintf( cmd, "%dHCG0", prec->axis );
                 }
                 else
                 {
                     log_msg( prec, 0, "Homing << to encoder mark ..." );
 
-                    clen = sprintf( cmd, "%dHCG0", prec->axis );
+                    if ( mdir == 1 )
+                        clen = sprintf( cmd, "%dHCG0", prec->axis );
+                    else
+                        clen = sprintf( cmd, "%dHCG1", prec->axis );
                 }
 
                 mmcCmd->send( cmd, clen );
@@ -1186,15 +1193,6 @@ static long special( dbAddr *pDbAddr, int after )
                 db_post_events( prec, &prec->hls,  DBE_VAL_LOG );
             }
 
-            clen = sprintf( cmd, "%dMPL%d", prec->axis, prec->dir  );
-            mmcCmd->send( cmd, clen );
-
-            prec->epl  = 1 - prec->epl ;
-            db_post_events( prec, &prec->epl,  DBE_VAL_LOG );
-
-            clen = sprintf( cmd, "%dEPL%d", prec->axis, prec->epl  );
-            mmcCmd->send( cmd, clen );
-
             goto change_dir_off;
         case ( mmcaRecordOFF  ):
             prec->llm += prec->off - prec->oval;
@@ -1204,7 +1202,7 @@ static long special( dbAddr *pDbAddr, int after )
             db_post_events( prec, &prec->llm,  DBE_VAL_LOG );
             db_post_events( prec, &prec->hlm,  DBE_VAL_LOG );
 
-            prec->rbv  = prec->drbv + prec->off;
+            prec->rbv  = prec->drbv * (1 - 2*prec->dir) + prec->off;
             prec->val  = prec->rbv;
 
 //          check_software_limits( prec );
@@ -1215,7 +1213,7 @@ static long special( dbAddr *pDbAddr, int after )
                  (prec->set == mmcaSET_Set)    ) break;
 
             prec->rbv  = prec->val;
-            prec->off  = prec->rbv - prec->drbv * (1. - 2.*prec->dir);
+            prec->off  = prec->rbv - prec->drbv * (1 - 2*prec->dir);
             db_post_events( prec, &prec->off,  DBE_VAL_LOG );
 
             if ( prec->dir == mmcaDIR_Positive )
@@ -1536,6 +1534,13 @@ static long special( dbAddr *pDbAddr, int after )
             if ( prec->lpl  == prec->oval ) break;
 
             clen = sprintf( cmd, "%dLPL%d", prec->axis, prec->lpl  );
+            mmcCmd->send( cmd, clen );
+
+            goto stup;
+        case mmcaRecordMPL :
+            if ( prec->mpl  == prec->oval ) break;
+
+            clen = sprintf( cmd, "%dMPL%d", prec->axis, prec->mpl  );
             mmcCmd->send( cmd, clen );
 
             goto stup;

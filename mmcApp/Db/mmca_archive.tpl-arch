@@ -7,6 +7,7 @@ $(MOTOR).FBK          86400    monitor
 $(MOTOR).LCG          86400    monitor
 $(MOTOR).LDR          86400    monitor
 $(MOTOR).LPL          86400    monitor
+$(MOTOR).MPL          86400    monitor
 $(MOTOR).REZ          86400    monitor
 $(MOTOR).EGU          86400    monitor
 $(MOTOR).ERES         86400    monitor
