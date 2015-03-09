@@ -35,10 +35,11 @@
 
 /*** Record Support Entry Table (RSET) functions ***/
 
-static long init_record( dbCommon *precord, int pass  );
-static long process    ( dbCommon *precord            );
-static long special    ( dbAddr   *pDbAddr, int after );
-static long cvt_dbaddr ( dbAddr   *pDbAddr            );
+static long init_record  ( dbCommon *precord, int pass        );
+static long process      ( dbCommon *precord                  );
+static long special      ( dbAddr   *pDbAddr, int after       );
+static long cvt_dbaddr   ( dbAddr   *pDbAddr                  );
+static long get_precision( dbAddr   *pDbAddr, long *precision );
 
 
 rset mmcaRSET =
@@ -54,7 +55,7 @@ rset mmcaRSET =
     NULL,
     NULL,
     NULL,
-    NULL,
+    (RECSUPFUN) get_precision,
     NULL,
     NULL,
     NULL,
@@ -303,13 +304,13 @@ static long process( dbCommon *precord )
     unsigned short   old_mip,  alarm_mask;
     short            old_movn, old_dmov, old_rcnt, old_miss;
     double           old_val,  old_dval, old_drbv, old_rbv, old_diff, diff;
-    long             old_rval, status = OK;
     mmc_status       old_sta,  sta;
     motor_status     old_msta, msta;
     float            old_vrt;
     timespec         ts;
     int              clen;
     bool             first = FALSE;
+    long             status = OK;
 
     if ( prec->pact ) return( OK );
 
@@ -464,7 +465,6 @@ static long process( dbCommon *precord )
     old_miss = prec->miss;
     old_val  = prec->val ;
     old_dval = prec->dval;
-    old_rval = prec->rval;
 
     diff = prec->rbv - prec->val;
 
@@ -527,7 +527,6 @@ static long process( dbCommon *precord )
             prec->dmov = 1;
             prec->val  = prec->rbv;
             prec->dval = prec->drbv;
-            prec->rval = prec->rrbv;
             prec->diff = 0;
         }
     }
@@ -569,7 +568,6 @@ static long process( dbCommon *precord )
     if ( old_miss != prec->miss ) MARK( M_MISS );
     if ( old_val  != prec->val  ) MARK( M_VAL  );
     if ( old_dval != prec->dval ) MARK( M_DVAL );
-    if ( old_rval != prec->rval ) MARK( M_RVAL );
 
     finished:
     if      ( msta.Bits.RA_PROBLEM                        )          // software
@@ -675,7 +673,6 @@ static long special( dbAddr *pDbAddr, int after )
     mmcaRecord      *prec = (mmcaRecord *)pDbAddr->precord;
     mmca_info       *mInfo = (mmca_info *)prec->dpvt;
     char             cmd[MAX_MSG_SIZE];
-    long             old_rval;
     short            old_dmov, old_rcnt, old_lvio;
     double           nval, old_val, old_dval, old_rbv, new_dval;
     unsigned short   old_mip, alarm_mask = 0;
@@ -719,7 +716,6 @@ static long special( dbAddr *pDbAddr, int after )
 
     old_val  = prec->val ;
     old_dval = prec->dval;
-    old_rval = prec->rval;
     old_rbv  = prec->rbv ;
     old_mip  = prec->mip ;
     old_dmov = prec->dmov;
@@ -922,20 +918,30 @@ static long special( dbAddr *pDbAddr, int after )
 
             db_post_events( prec, &prec->athm, DBE_VAL_LOG );
 
-            prec->dmov = 0;
-            if ( fieldIndex == mmcaRecordJOGF )
-            {                      // Jogging has the same orientation as moving
-                prec->mip  = MIP_JOGF;
+            if ( fieldIndex == mmcaRecordJOGF ) prec->mip  = MIP_JOGF;
+            else                                prec->mip  = MIP_JOGR;
 
-                clen = sprintf( cmd, "%dJOG%.3f", prec->axis,  prec->jfra );
+            do_jog:
+            prec->dmov = 0;
+
+            mdir = (prec->dir == mmcaDIR_Positive) ? 1 : -1;
+            if ( prec->mip == MIP_JOGF )
+            {
                 log_msg( prec, 0, "Jogging forward ..."  );
+
+                if ( mdir == 1 )
+                    clen = sprintf( cmd, "%dJOG%.3f", prec->axis,  prec->jfra );
+                else
+                    clen = sprintf( cmd, "%dJOG%.3f", prec->axis, -prec->jfra );
             }
             else
             {
-                prec->mip  = MIP_JOGR;
-
-                clen = sprintf( cmd, "%dJOG%.3f", prec->axis, -prec->jfra );
                 log_msg( prec, 0, "Jogging backward ..." );
+
+                if ( mdir == 1 )
+                    clen = sprintf( cmd, "%dJOG%.3f", prec->axis, -prec->jfra );
+                else
+                    clen = sprintf( cmd, "%dJOG%.3f", prec->axis,  prec->jfra );
             }
 
             mmcCmd->send( cmd, clen );
@@ -1037,11 +1043,13 @@ static long special( dbAddr *pDbAddr, int after )
             if ( fieldIndex == mmcaRecordHOMF ) prec->mip  = MIP_HOMF;
             else                                prec->mip  = MIP_HOMR;
 
-            mdir = (prec->dir == mmcaDIR_Positive) ? 1 : -1;
+            do_home:
+            prec->dmov = 0;
 
+            mdir = (prec->dir == mmcaDIR_Positive) ? 1 : -1;
             if ( prec->htyp == mmcHTYP_Limits )
             {
-                if ( fieldIndex == mmcaRecordHOMF )
+                if ( prec->mip == MIP_HOMF )
                 {
                     log_msg( prec, 0, "Homing >> to HLS ..." );
 
@@ -1062,7 +1070,7 @@ static long special( dbAddr *pDbAddr, int after )
             }
             else
             {
-                if ( fieldIndex == mmcaRecordHOMF )
+                if ( prec->mip == MIP_HOMF )
                 {
                     log_msg( prec, 0, "Homing >> to encoder mark ..." );
 
@@ -1094,32 +1102,12 @@ static long special( dbAddr *pDbAddr, int after )
 
             if ( prec->spg == mmcaSPG_Go )
             {
+                if ( prec->mip & MIP_STOP ) break;
+
                 prec->mip &= ~( MIP_STOP | MIP_PAUSE );
-                if ( prec->mip & MIP_JOG )
-                {
-                    log_msg( prec, 0, "Resume jogging" );
-
-                    if ( prec->mip & MIP_JOGF )
-                    {
-//                      if ( prec->dir == mmcaDIR_Positive )
-//                          send_and_recv( mInfo, "J+", rbbuf );
-//                      else
-//                          send_and_recv( mInfo, "J-", rbbuf );
-                    }
-                    else
-                    {
-//                      if ( prec->dir == mmcaDIR_Positive )
-//                          send_and_recv( mInfo, "J-", rbbuf );
-//                      else
-//                          send_and_recv( mInfo, "J+", rbbuf );
-                    }
-                }
-                else
-                {
-                    log_msg( prec, 0, "Resume moving"  );
-
-                    do_move( prec );
-                }
+                if      ( prec->mip & MIP_JOG  ) goto do_jog;
+                else if ( prec->mip & MIP_HOME ) goto do_home;
+                else                             new_move( prec );
 
                 break;
             }
@@ -1585,7 +1573,6 @@ static long special( dbAddr *pDbAddr, int after )
 
     if ( prec->val  != old_val  ) MARK( M_VAL  );
     if ( prec->dval != old_dval ) MARK( M_DVAL );
-    if ( prec->rval != old_rval ) MARK( M_RVAL );
     if ( prec->rbv  != old_rbv  ) MARK( M_RBV  );
     if ( prec->mip  != old_mip  ) MARK( M_MIP  );
     if ( prec->dmov != old_dmov ) MARK( M_DMOV );
@@ -1687,6 +1674,63 @@ static long cvt_dbaddr( dbAddr *pDbAddr )
 }
 
 /******************************************************************************/
+static long get_precision( dbAddr *pDbAddr, long *precision )
+{
+    mmcaRecord *prec = (mmcaRecord *)pDbAddr->precord;
+    int fieldIndex = dbGetFieldIndex( pDbAddr );
+
+    switch ( fieldIndex )
+    {
+        case mmcaRecordVERS:
+            *precision = 2;
+
+            break;
+        case mmcaRecordERES:
+            *precision = 6;
+
+            break;
+        case mmcaRecordDBDT:
+            *precision = 3;
+
+            break;
+        case mmcaRecordAMAX:
+            *precision = 3;
+
+            break;
+        case mmcaRecordACCL:
+            *precision = 3;
+
+            break;
+        case mmcaRecordJACC:
+            *precision = 3;
+
+            break;
+        case mmcaRecordVMAX:
+            *precision = 3;
+
+            break;
+        case mmcaRecordVELO:
+            *precision = 3;
+
+            break;
+        case mmcaRecordVRT :
+            *precision = 3;
+
+            break;
+        case mmcaRecordJFRA:
+            *precision = 3;
+
+            break;
+        default:
+            *precision = prec->prec;
+
+            break;
+    }
+
+    return( 0 );
+}
+
+/******************************************************************************/
 static long update_field( struct mmca_info *mInfo )
 {
     mmcaRecord  *prec = mInfo->precord;
@@ -1762,12 +1806,6 @@ static void post_fields( mmcaRecord *prec, unsigned short alarm_mask,
 
     if ( (field_mask = alarm_mask | (all | MARKED(M_DVAL) ? DBE_VAL_LOG : 0)) )
         db_post_events( prec, &prec->dval, field_mask );
-
-    if ( (field_mask = alarm_mask | (all | MARKED(M_RVAL) ? DBE_VAL_LOG : 0)) )
-        db_post_events( prec, &prec->rval, field_mask );
-
-    if ( (field_mask = alarm_mask | (all | MARKED(M_RRBV) ? DBE_VAL_LOG : 0)) )
-        db_post_events( prec, &prec->rrbv, field_mask );
 
     if ( (field_mask = alarm_mask | (all | MARKED(M_DRBV) ? DBE_VAL_LOG : 0)) )
         db_post_events( prec, &prec->drbv, field_mask );

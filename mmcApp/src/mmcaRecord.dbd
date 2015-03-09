@@ -318,10 +318,6 @@ recordtype(mmca) {
 		special(SPC_MOD)
 		asl(ASL0)
 	}
-	field(RVAL,DBF_LONG) {
-		prompt("Raw Desired Value (step)")
-		special(SPC_NOMOD)
-	}
 	field(TWV,DBF_DOUBLE) {
 		prompt("Tweak Amount (EGU)")
 		promptgroup(GUI_COMMON)
@@ -420,10 +416,6 @@ recordtype(mmca) {
 		promptgroup(GUI_COMMON)
 		special(SPC_NOMOD)
 		initial(1)
-	}
-	field(RRBV,DBF_LONG) {
-		prompt("Encoder Readback Value")
-		special(SPC_NOMOD)
 	}
 	field(DRBV,DBF_DOUBLE) {
 		prompt("Dial Readback Value")
