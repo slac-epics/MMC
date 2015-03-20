@@ -19,7 +19,6 @@ typedef union
 
 struct mmca_info
 {
-    CALLBACK            callback;
     struct mmcaRecord  *precord;
 
     epicsMutex         *uMutex;

@@ -11,7 +11,8 @@ EPICS_BASE=$(EPICS_SITE_TOP)/base/$(BASE_MODULE_VERSION)
 # ===============================================================
 # Define the version(s) of any other needed modules 
 # ===============================================================
-ASYN_MODULE_VERSION = R4.23-0.4.0
+ASYN_MODULE_VERSION = R4.23-0.3.0
+BUSY_MODULE_VERSION = R1.6.0-0.8.0
 
 # ============================================================
 # External Support module path definitions
@@ -27,4 +28,5 @@ ASYN_MODULE_VERSION = R4.23-0.4.0
 # If your build fails, look for these paths in your build output
 # ============================================================
 ASYN=$(EPICS_MODULES)/asyn/$(ASYN_MODULE_VERSION)
+BUSY=$(EPICS_MODULES)/busy/$(BUSY_MODULE_VERSION)
 

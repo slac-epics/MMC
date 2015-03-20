@@ -312,11 +312,13 @@ recordtype(mmca) {
 		prompt("User Desired Value (EGU)")
 		special(SPC_MOD)
 		asl(ASL0)
+		pp(TRUE)
 	}
 	field(DVAL,DBF_DOUBLE) {
 		prompt("Dial Desired Value (EGU)")
 		special(SPC_MOD)
 		asl(ASL0)
+		pp(TRUE)
 	}
 	field(TWV,DBF_DOUBLE) {
 		prompt("Tweak Amount (EGU)")
@@ -329,11 +331,13 @@ recordtype(mmca) {
 		prompt("Tweak Motor Forward")
 		special(SPC_MOD)
 		asl(ASL0)
+		pp(TRUE)
 	}
 	field(TWR,DBF_SHORT) {
 		prompt("Tweak Motor Reverse")
 		special(SPC_MOD)
 		asl(ASL0)
+		pp(TRUE)
 	}
 	field(LVIO,DBF_SHORT) {
 		prompt("Limit Violation")

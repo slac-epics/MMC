@@ -97,7 +97,6 @@ static void post_fields ( mmcaRecord *precord, unsigned short alarm_mask,
 
 static long update_field( struct mmca_info *mInfo                         );
 
-static void update_info ( struct mmca_info *mInfo                         );
 static void getResponse ( struct mmca_info *mInfo                         );
 
 static long log_msg  ( mmcaRecord *prec, int dlvl, const char *fmt, ...   );
@@ -153,13 +152,9 @@ static long init_record( dbCommon *precord, int pass )
     gethostname( prec->host, 60                   );
     strcpy     ( prec->iocn, getenv("EPICS_NAME") );
 
-    callbackSetCallback( (void (*)(struct callbackPvt *))update_info,
-                         &(mInfo->callback) );
-    callbackSetPriority( priorityMedium, &(mInfo->callback) );
-
-    epicsThreadCreate  ( prec->name, epicsThreadPriorityMedium,
-                         epicsThreadGetStackSize(epicsThreadStackMedium),
-                         (EPICSTHREADFUNC)getResponse, (void *)mInfo );
+    epicsThreadCreate( prec->name, epicsThreadPriorityMedium,
+                       epicsThreadGetStackSize(epicsThreadStackMedium),
+                       (EPICSTHREADFUNC)getResponse, (void *)mInfo );
 
     init_axis( prec );
 
@@ -1855,12 +1850,6 @@ static void post_fields( mmcaRecord *prec, unsigned short alarm_mask,
 }
 
 /******************************************************************************/
-static void update_info( struct mmca_info *mInfo )
-{
-    scanOnce( (struct dbCommon *)mInfo->precord );
-}
-
-/******************************************************************************/
 static void getResponse( struct mmca_info *mInfo )
 {
     mmcaRecord  *prec = mInfo->precord;
@@ -1911,7 +1900,9 @@ static void getResponse( struct mmca_info *mInfo )
 
         mInfo->uMutex->unlock();
 
-        callbackRequest( (CALLBACK *)mInfo );
+        dbScanLock  ( (dbCommon *)prec );
+        process     ( (dbCommon *)prec );
+        dbScanUnlock( (dbCommon *)prec );
     }
 
     mInfo->uMutex->lock();
@@ -1921,7 +1912,9 @@ static void getResponse( struct mmca_info *mInfo )
 
     mInfo->uMutex->unlock();
 
-    callbackRequest( (CALLBACK *)mInfo );
+    dbScanLock  ( (dbCommon *)prec );
+    process     ( (dbCommon *)prec );
+    dbScanUnlock( (dbCommon *)prec );
 }
 
 /******************************************************************************/
