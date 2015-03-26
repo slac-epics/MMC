@@ -666,15 +666,13 @@ static void do_move( mmcaRecord *prec )
 static long special( dbAddr *pDbAddr, int after )
 {
     mmcaRecord      *prec = (mmcaRecord *)pDbAddr->precord;
-    mmca_info       *mInfo = (mmca_info *)prec->dpvt;
     char             cmd[MAX_MSG_SIZE];
     short            old_dmov, old_rcnt, old_lvio;
     double           nval, old_val, old_dval, old_rbv, new_dval;
     unsigned short   old_mip, alarm_mask = 0;
     motor_status     msta;
 
-    int              clen, mdir;
-    int              fieldIndex = dbGetFieldIndex( pDbAddr ), status = OK;
+    int              clen, mdir, fieldIndex = dbGetFieldIndex( pDbAddr );
 
     if ( after == 0 )
     {
@@ -1577,7 +1575,7 @@ static long special( dbAddr *pDbAddr, int after )
     post_fields( prec, alarm_mask, 0 );
     post_msgs  ( prec                );
 
-    return( 0 );
+    return( OK );
 }
 
 /******************************************************************************/

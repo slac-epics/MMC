@@ -42,7 +42,6 @@
 /*** Record Support Entry Table (RSET) functions ***/
 
 static long init_record( dbCommon *precord, int pass );
-static long process    ( dbCommon *precord           );
 
 
 rset mmcRSET =
@@ -51,7 +50,7 @@ rset mmcRSET =
     NULL,
     NULL,
     (RECSUPFUN) init_record,
-    (RECSUPFUN) process,
+    NULL,
     NULL,
     NULL,
     NULL,
@@ -104,7 +103,7 @@ static long init_record( dbCommon *precord, int pass )
 
     if ( pass > 0 ) return( status );
 
-    mmcCmd         = new epicsMessageQueue( prec->naxs*100, MAX_MSG_SIZE );
+    mmcCmd         = new epicsMessageQueue( 100*prec->naxs, MAX_MSG_SIZE );
     for ( int im = 0; im < prec->naxs; im++ )
         mmcRsp[im] = new epicsMessageQueue( 100,            MAX_MSG_SIZE );
 
@@ -129,12 +128,6 @@ static long init_record( dbCommon *precord, int pass )
                        (EPICSTHREADFUNC)serial_io, (void *)pasynUser );
 
     return( status );
-}
-
-/******************************************************************************/
-static long process( dbCommon *precord )
-{
-    return( 0 );
 }
 
 /******************************************************************************/
