@@ -141,8 +141,7 @@ static long send_n_recv( asynUser *pasynUser, int axis, char *cmd, char *rsp )
     pasynOctetSyncIO->flush( pasynUser );
     pasynOctetSyncIO->write( pasynUser, cmd, strlen(cmd), timeout, &nwrite );
 
-    if ( axis > 9 ) coff = 2;
-    else            coff = 1;
+    coff = ( axis > 9 ) ? 2 : 1 ;
 
     if ( (strncmp(cmd+coff, "RST", 3) == 0) || (cmd[strlen(cmd)-1] == '?') )
     {                                                            // need to read
@@ -218,8 +217,7 @@ static void handle_cmd( asynUser *pasynUser, char *cmd, list<int> &moving_new )
     status = sscanf( cmd, "%d", &axis );
     if ( (status == 1) && (axis >= 1) && (axis <= 99) )
     {
-        if ( axis > 9 ) coff = 2;
-        else            coff = 1;
+        coff = ( axis > 9 ) ? 2 : 1 ;
 
         if      ( strncmp(cmd+coff, "STUP", 4) == 0 )
             status = read_status( pasynUser, axis );

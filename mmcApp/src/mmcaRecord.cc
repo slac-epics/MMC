@@ -376,8 +376,8 @@ static long process( dbCommon *precord )
 
     prec->sta  = sta.All = mInfo->sta;
     prec->vrt            = mInfo->vrt;
-    if ( prec->fbk < mmcaFBK_Closed2 ) prec->drbv = mInfo->tpos;
-    else                               prec->drbv = mInfo->epos;
+
+    prec->drbv = prec->fbk < mmcaFBK_Closed2 ? mInfo->tpos : mInfo->epos;
     prec->rbv  = prec->drbv * (1 - 2*prec->dir) + prec->off;
 
     if ( old_sta.All != prec->sta  ) MARK( M_STA  );
@@ -471,13 +471,10 @@ static long process( dbCommon *precord )
 
         if      ( prec->mip & MIP_JOG   )
         {
-            if ( prec->mip & MIP_STOP )
-                log_msg( prec, 0, "Stopped jogging at %.6g (DRBV: %.6g)",
-                                  prec->rbv, prec->drbv );
-            else
-                log_msg( prec, 0, "Jogging stopped at %.6g (DRBV: %.6g)",
-                                  prec->rbv, prec->drbv );
-
+            prec->mip & MIP_STOP ?
+            log_msg( prec, 0, "Stopped jogging at %.6g (DRBV: %.6g)", prec->rbv, prec->drbv ) :
+            log_msg( prec, 0, "Jogging stopped at %.6g (DRBV: %.6g)", prec->rbv, prec->drbv ) ;
+                                   
             prec->miss = 0;
         }
         else if ( prec->mip & MIP_STOP  )
@@ -626,8 +623,8 @@ static void new_move( mmcaRecord *prec )
         log_msg( prec, 0, "Move to positive limit" );
 
         prec->mip  = MIP_MLP ;
-        if ( mdir == 1 ) clen = sprintf( cmd, "%dMLP", prec->axis );
-        else             clen = sprintf( cmd, "%dMLN", prec->axis );
+
+        clen = mdir == 1 ? sprintf( cmd, "%dMLP", prec->axis ) : sprintf( cmd, "%dMLN", prec->axis );
         mmcCmd->send( cmd, clen );
     }
     else if ( prec->mip & MIP_MLN )
@@ -635,8 +632,8 @@ static void new_move( mmcaRecord *prec )
         log_msg( prec, 0, "Move to negative limit" );
 
         prec->mip  = MIP_MLN ;
-        if ( mdir == 1 ) clen = sprintf( cmd, "%dMLN", prec->axis );
-        else             clen = sprintf( cmd, "%dMLP", prec->axis );
+
+        clen = mdir == 1 ? sprintf( cmd, "%dMLN", prec->axis ) : sprintf( cmd, "%dMLP", prec->axis );
         mmcCmd->send( cmd, clen );
     }
     else
@@ -922,19 +919,15 @@ static long special( dbAddr *pDbAddr, int after )
             {
                 log_msg( prec, 0, "Jogging forward ..."  );
 
-                if ( mdir == 1 )
-                    clen = sprintf( cmd, "%dJOG%.3f", prec->axis,  prec->jfra );
-                else
-                    clen = sprintf( cmd, "%dJOG%.3f", prec->axis, -prec->jfra );
+                clen = ( mdir == 1 ) ? sprintf( cmd, "%dJOG%.3f", prec->axis,  prec->jfra ) :
+                                       sprintf( cmd, "%dJOG%.3f", prec->axis, -prec->jfra ) ;
             }
             else
             {
                 log_msg( prec, 0, "Jogging backward ..." );
 
-                if ( mdir == 1 )
-                    clen = sprintf( cmd, "%dJOG%.3f", prec->axis, -prec->jfra );
-                else
-                    clen = sprintf( cmd, "%dJOG%.3f", prec->axis,  prec->jfra );
+                clen = ( mdir == 1 ) ? sprintf( cmd, "%dJOG%.3f", prec->axis, -prec->jfra ) :
+                                       sprintf( cmd, "%dJOG%.3f", prec->axis,  prec->jfra ) ;
             }
 
             mmcCmd->send( cmd, clen );
@@ -1033,8 +1026,7 @@ static long special( dbAddr *pDbAddr, int after )
 
             db_post_events( prec, &prec->athm, DBE_VAL_LOG );
 
-            if ( fieldIndex == mmcaRecordHOMF ) prec->mip  = MIP_HOMF;
-            else                                prec->mip  = MIP_HOMR;
+            prec->mip = fieldIndex == mmcaRecordHOMF ? MIP_HOMF : MIP_HOMR;
 
             do_home:
             prec->dmov = 0;
@@ -1046,19 +1038,15 @@ static long special( dbAddr *pDbAddr, int after )
                 {
                     log_msg( prec, 0, "Homing >> to HLS ..." );
 
-                    if ( mdir == 1 )
-                        clen = sprintf( cmd, "%dMLP", prec->axis );
-                    else
-                        clen = sprintf( cmd, "%dMLN", prec->axis );
+                    clen = (mdir == 1) ? sprintf( cmd, "%dMLP", prec->axis ) :
+                                         sprintf( cmd, "%dMLN", prec->axis ) ;
                 }
                 else
                 {
                     log_msg( prec, 0, "Homing << to LLS ..." );
 
-                    if ( mdir == 1 )
-                        clen = sprintf( cmd, "%dMLN", prec->axis );
-                    else
-                        clen = sprintf( cmd, "%dMLP", prec->axis );
+                    clen = (mdir == 1) ? sprintf( cmd, "%dMLN", prec->axis ) :
+                                         sprintf( cmd, "%dMLP", prec->axis ) ;
                 }
             }
             else
@@ -1067,19 +1055,15 @@ static long special( dbAddr *pDbAddr, int after )
                 {
                     log_msg( prec, 0, "Homing >> to encoder mark ..." );
 
-                    if ( mdir == 1 )
-                        clen = sprintf( cmd, "%dHCG1", prec->axis );
-                    else
-                        clen = sprintf( cmd, "%dHCG0", prec->axis );
+                    clen = (mdir == 1) ? sprintf( cmd, "%dHCG1", prec->axis ) :
+                                         sprintf( cmd, "%dHCG0", prec->axis ) ;
                 }
                 else
                 {
                     log_msg( prec, 0, "Homing << to encoder mark ..." );
 
-                    if ( mdir == 1 )
-                        clen = sprintf( cmd, "%dHCG0", prec->axis );
-                    else
-                        clen = sprintf( cmd, "%dHCG1", prec->axis );
+                    clen = (mdir == 1) ? sprintf( cmd, "%dHCG0", prec->axis ) :
+                                         sprintf( cmd, "%dHCG1", prec->axis ) ;
                 }
 
                 mmcCmd->send( cmd, clen );
@@ -1318,10 +1302,8 @@ static long special( dbAddr *pDbAddr, int after )
                 prec->dllm = prec->oval;
                 db_post_events( prec, &prec->dllm, DBE_VAL_LOG );
 
-                if ( prec->dllm <= -1000 )
-                    log_msg( prec, 0, "DLLM <= -1000, retain old DLLM" );
-                else
-                    log_msg( prec, 0, "DLLM > DHLM, retain old DLLM"   );
+                prec->dllm <= -1000 ? log_msg( prec, 0, "DLLM <= -1000, retain old DLLM" ) :
+                                      log_msg( prec, 0, "DLLM > DHLM, retain old DLLM"   ) ;
 
                 break;
             }
@@ -1731,8 +1713,7 @@ static long update_field( struct mmca_info *mInfo )
     float        eres, vmax;
     long         status;
 
-    if ( prec->axis > 9 ) coff = 2;
-    else                  coff = 1;
+    coff = prec->axis > 9 ? 2 : 1;
 
     strcpy( prec->resp, mInfo->rsp );
     db_post_events( prec,  prec->resp, DBE_VAL_LOG );
