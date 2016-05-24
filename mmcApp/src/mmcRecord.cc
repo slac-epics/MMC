@@ -177,7 +177,7 @@ static long send_n_recv( asynUser *pasynUser, int axis, char *cmd, char *rsp )
 static long read_status( asynUser *pasynUser, int axis )   // return status byte
 {
     char  cmd [MAX_MSG_SIZE];
-    char  rsp1[MAX_MSG_SIZE], rsp2[MAX_MSG_SIZE], rsp3[MAX_MSG_SIZE];
+    char  rsp1[MAX_MSG_SIZE], rsp2[MAX_MSG_SIZE], rsp3[MAX_MSG_SIZE], rsp4[MAX_MSG_SIZE];
     int   clen, sta;
     long  status = 0;
 
@@ -193,12 +193,16 @@ static long read_status( asynUser *pasynUser, int axis )   // return status byte
     clen   = sprintf( cmd, "%dPOS?", axis );
     status = send_n_recv( pasynUser, axis, cmd, rsp3 );
 
+    // read the feedback setting
+    clen   = sprintf( cmd, "%dFBK?", axis );
+    status = send_n_recv( pasynUser, axis, cmd, rsp4 );
+
     // send info to the axis record
     if ( (strlen(rsp1) > 0) && (strlen(rsp2) > 0) && (strlen(rsp3) > 0) )
     {
         status = sscanf( rsp1, "#%d", &sta );
 
-        clen   = sprintf( cmd, "%dSTA%s,VRT%s,POS%s", axis, rsp1, rsp2, rsp3 );
+        clen   = sprintf( cmd, "%dSTA%s,VRT%s,POS%s,FBK%s", axis, rsp1, rsp2, rsp3, rsp4 );
         mmcRsp[axis-1]->send( cmd, clen );
     }
     else

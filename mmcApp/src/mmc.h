@@ -28,6 +28,7 @@ struct mmca_info
     float               vrt;
     float               tpos;
     float               epos;
+    epicsUInt16         fbk;
     char                rsp[MAX_MSG_SIZE];
     short               newData;
 
@@ -94,6 +95,7 @@ typedef union
         unsigned int M_HLS      :1;
         unsigned int M_LVIO     :1;
         unsigned int M_MSTA     :1;
+        unsigned int M_FBK      :1;
     } Bits;
 } changed_fields;
 

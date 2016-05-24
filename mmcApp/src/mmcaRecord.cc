@@ -297,7 +297,7 @@ static long process( dbCommon *precord )
     mmca_info       *mInfo = (mmca_info  *)prec->dpvt;
     char             cmd[MAX_MSG_SIZE];
     unsigned short   old_mip,  alarm_mask;
-    short            old_movn, old_dmov, old_rcnt, old_miss;
+    short            old_movn, old_dmov, old_rcnt, old_miss, old_fbk;
     double           old_val,  old_dval, old_drbv, old_rbv, old_diff, diff;
     mmc_status       old_sta,  sta;
     motor_status     old_msta, msta;
@@ -373,7 +373,9 @@ static long process( dbCommon *precord )
     old_drbv     = prec->drbv;
     old_rbv      = prec->rbv ;
     old_vrt      = prec->vrt ;
+    old_fbk      = prec->fbk ;
 
+    prec->fbk            = mInfo->fbk; //make sure feedback setting is current to avoid confusion
     prec->sta  = sta.All = mInfo->sta;
     prec->vrt            = mInfo->vrt;
 
@@ -384,6 +386,7 @@ static long process( dbCommon *precord )
     if ( old_vrt     != prec->vrt  ) MARK( M_VRT  );
     if ( old_drbv    != prec->drbv ) MARK( M_DRBV );
     if ( old_rbv     != prec->rbv  ) MARK( M_RBV  );
+    if ( old_fbk     != prec->fbk  ) MARK( M_FBK  );
 
     msta.All         = 0;
 
@@ -1823,6 +1826,9 @@ static void post_fields( mmcaRecord *prec, unsigned short alarm_mask,
     if ( (field_mask = alarm_mask | (all | MARKED(M_MSTA) ? DBE_VAL_LOG : 0)) )
         db_post_events( prec, &prec->msta, field_mask );
 
+    if ( (field_mask = alarm_mask | (all | MARKED(M_FBK) ? DBE_VAL_LOG : 0)) )
+        db_post_events( prec, &prec->fbk, field_mask );
+
     UNMARK_ALL;
 
     return;
@@ -1833,7 +1839,7 @@ static void getResponse( struct mmca_info *mInfo )
 {
     mmcaRecord  *prec = mInfo->precord;
     char         rsp[MAX_MSG_SIZE];
-    int          mlen, axis, sta, nread;
+    int          mlen, axis, sta, nread, fbk;
     float        vrt, tpos, epos;
 
     while ( ! interruptAccept ) epicsThreadSleep( 1 );
@@ -1851,9 +1857,9 @@ static void getResponse( struct mmca_info *mInfo )
         }
         else
         {
-            nread = sscanf( rsp, "%dSTA#%d,VRT#%f,POS#%f,%f",
-                                 &axis, &sta, &vrt, &tpos, &epos );
-            if ( nread == 5 )
+            nread = sscanf( rsp, "%dSTA#%d,VRT#%f,POS#%f,%f,FBK#%d",
+                                 &axis, &sta, &vrt, &tpos, &epos, &fbk );
+            if ( nread == 6 )
             {
                 if ( axis == prec->axis )
                 {
@@ -1861,6 +1867,7 @@ static void getResponse( struct mmca_info *mInfo )
                     mInfo->vrt     = vrt;
                     mInfo->tpos    = tpos;
                     mInfo->epos    = epos;
+                    mInfo->fbk     = fbk;
 
                     mInfo->newData = 9;
                 }
