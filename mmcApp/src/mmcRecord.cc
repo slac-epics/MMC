@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <list.h>
+#include <list>
 #include <ctype.h>
 #include <alarm.h>
 #include <dbDefs.h>
@@ -26,6 +26,8 @@
 #undef GEN_SIZE_OFFSET
 
 #include "drvAsynIPPort.h"
+#include "drvAsynSerialPort.h"
+#include "asynShellCommands.h"
 #include "asynDriver.h"
 #include "asynOctet.h"
 #include "asynOctetSyncIO.h"
@@ -71,7 +73,7 @@ extern "C" { epicsExportAddress( rset, mmcRSET ); }
 
 static long send_n_recv( asynUser *pasynUser, int axis, char *cmd, char *rsp  );
 static long read_status( asynUser *pasynUser, int axis                        );
-static void handle_cmd ( asynUser *pasynUser, char *cmd, list<int> &moving_new);
+static void handle_cmd ( asynUser *pasynUser, char *cmd, std::list<int> &moving_new);
 static void serial_io  ( asynUser *pasynUser                                  );
 
 
@@ -107,9 +109,23 @@ static long init_record( dbCommon *precord, int pass )
     for ( int im = 0; im < prec->naxs; im++ )
         mmcRsp[im] = new epicsMessageQueue( 100,            MAX_MSG_SIZE );
 
-    sprintf( serialPort, "%s TCP", prec->port );
-
-    drvAsynIPPortConfigure              ( prec->asyn, serialPort, 0, 0, 0 );
+    if (prec->port[0] != '/') {
+        printf("Opening TCP port %s...\n", prec->port);
+        sprintf( serialPort, "%s TCP", prec->port );
+        drvAsynIPPortConfigure              ( prec->asyn, serialPort, 0, 0, 0 );
+    } else {
+        printf("Opening serial port %s...\n", prec->port);
+        drvAsynSerialPortConfigure(prec->asyn, prec->port, 0, 0, 0);
+        asynSetOption(prec->asyn, 0, "baud", "38400");
+        asynSetOption(prec->asyn, 0, "bits", "8");
+        asynSetOption(prec->asyn, 0, "stop", "1");
+        asynSetOption(prec->asyn, 0, "parity", "none");
+        asynSetOption(prec->asyn, 0, "ixon", "N");
+        asynSetOption(prec->asyn, 0, "ixoff", "N");
+        asynSetOption(prec->asyn, 0, "ixany", "N");
+        asynSetOption(prec->asyn, 0, "crtscts", "N");
+        asynSetOption(prec->asyn, 0, "clocal", "Y");
+    }
     asyn_rtn = pasynOctetSyncIO->connect( prec->asyn, 0, &pasynUser, NULL );
 
     if ( asyn_rtn != asynSuccess )
@@ -133,7 +149,7 @@ static long init_record( dbCommon *precord, int pass )
 /******************************************************************************/
 static long send_n_recv( asynUser *pasynUser, int axis, char *cmd, char *rsp )
 {
-    const double  timeout = 1.0;
+    const double  timeout = 10.0;
     size_t        nwrite, nread = 0;
     int           it, coff, eomReason;
     asynStatus    asyn_rtn = asynError;
@@ -212,7 +228,7 @@ static long read_status( asynUser *pasynUser, int axis )   // return status byte
 }
 
 /******************************************************************************/
-static void handle_cmd( asynUser *pasynUser, char *cmd, list<int> &moving_new )
+static void handle_cmd( asynUser *pasynUser, char *cmd, std::list<int> &moving_new )
 {
     char  rsp[MAX_MSG_SIZE], rpl[MAX_MSG_SIZE];
     int   axis, coff;
@@ -258,8 +274,8 @@ static void handle_cmd( asynUser *pasynUser, char *cmd, list<int> &moving_new )
 static void serial_io( asynUser *pasynUser )
 {
     char                 cmd[MAX_MSG_SIZE];
-    list<int>            moving, moving_new;
-    list<int>::iterator  ia;
+    std::list<int>            moving, moving_new;
+    std::list<int>::iterator  ia;
     int                  clen;
     mmc_status           sta;
 
