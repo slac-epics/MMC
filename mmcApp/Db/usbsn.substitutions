@@ -1,0 +1,6 @@
+file usbsn.template
+{
+ pattern
+ { BASE,          PORT,       SERIAL,        TIME          },
+ { "\$(CTRL)",    "\$(ASYN)", "\$(SERIAL)",  "\$(TIME)",   }
+}

@@ -12,6 +12,7 @@ include $(TOP)/configure/CONFIG
 # databases, templates, substitutions like this
 DB_INSTALLS += mmc.db
 DB_INSTALLS += mmca.db
+DB += usbsn.db
 
 #----------------------------------------------------
 # Create and install (or just install)

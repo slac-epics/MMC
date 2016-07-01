@@ -13,6 +13,7 @@ EPICS_BASE=$(EPICS_SITE_TOP)/base/$(BASE_MODULE_VERSION)
 # ===============================================================
 ASYN_MODULE_VERSION = R4.29-0.1.2
 BUSY_MODULE_VERSION = R1.6.0-0.9.7
+USBSN_MODULE_VERSION         = R1.0.0-0.0.2
 
 # ============================================================
 # External Support module path definitions
@@ -29,3 +30,4 @@ BUSY_MODULE_VERSION = R1.6.0-0.9.7
 # ============================================================
 ASYN=$(EPICS_MODULES)/asyn/$(ASYN_MODULE_VERSION)
 BUSY=$(EPICS_MODULES)/busy/$(BUSY_MODULE_VERSION)
+USBSN=$(EPICS_MODULES)/usb_sn/$(USBSN_MODULE_VERSION)

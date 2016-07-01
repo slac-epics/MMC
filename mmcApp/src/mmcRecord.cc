@@ -37,6 +37,9 @@
 
 #include "mmc.h"
 
+/* MCB - This should be a proper export from the usb_sn module. */
+extern "C" void USB_Map(char *port, char *serial);
+
 
 /*** Forward references ***/
 
@@ -114,8 +117,8 @@ static long init_record( dbCommon *precord, int pass )
         sprintf( serialPort, "%s TCP", prec->port );
         drvAsynIPPortConfigure              ( prec->asyn, serialPort, 0, 0, 0 );
     } else {
-        printf("Opening serial port %s...\n", prec->port);
-        drvAsynSerialPortConfigure(prec->asyn, prec->port, 0, 0, 0);
+        printf("Opening serial number %s as asyn %s...\n", prec->port + 10, prec->asyn);
+        USB_Map(prec->asyn, prec->port + 10); /* 10 == strlen("/dev/ftdi-") */
         asynSetOption(prec->asyn, 0, "baud", "38400");
         asynSetOption(prec->asyn, 0, "bits", "8");
         asynSetOption(prec->asyn, 0, "stop", "1");
