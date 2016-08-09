@@ -1,6 +1,5 @@
 # MMC axis autosave list
 $(MOTOR).DESC
-$(MOTOR).AXIS
 $(MOTOR).EAD
 $(MOTOR).EPL
 $(MOTOR).FBK
