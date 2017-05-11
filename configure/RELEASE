@@ -1,33 +1,21 @@
 # RELEASE
 # Defines location of external products
-include $(TOP)/RELEASE_SITE
+# Run "gnumake clean uninstall install" in the application
+# top directory each time this file is changed.
+-include $(TOP)/configure/RELEASE.local
 
-# ===============================================================
-# Define the location and version of EPICS base
-# ===============================================================
-BASE_MODULE_VERSION=R3.14.12-0.4.0
-EPICS_BASE=$(EPICS_SITE_TOP)/base/$(BASE_MODULE_VERSION)
-
-# ===============================================================
-# Define the version(s) of any other needed modules 
-# ===============================================================
-ASYN_MODULE_VERSION = R4.29-0.1.2
-BUSY_MODULE_VERSION = R1.6.0-0.9.7
-USBSN_MODULE_VERSION         = R1.0.0-0.0.2
-
-# ============================================================
-# External Support module path definitions
-#
-# If any of these macros expand to a path which
-# contains an "include" directory, that directory will be
-# included in the compiler include path.
-#
-# If any of these macros expand to a path which
-# contains a "lib/<arch>" directory, that directory will be
-# included in the compiler link path for that architecture.
-#
-# If your build fails, look for these paths in your build output
-# ============================================================
-ASYN=$(EPICS_MODULES)/asyn/$(ASYN_MODULE_VERSION)
-BUSY=$(EPICS_MODULES)/busy/$(BUSY_MODULE_VERSION)
-USBSN=$(EPICS_MODULES)/usb_sn/$(USBSN_MODULE_VERSION)
+# Check for valid macro definitions for module release directories
+# You can add tests here to make sure RELEASE.local defined valid
+# macros for all the module dependencies
+ifeq ($(wildcard $(EPICS_BASE)/lib),)
+$(error Invalid EPICS_BASE: $(EPICS_BASE))
+endif
+ifeq ($(wildcard $(ASYN)/lib),)
+$(error Invalid ASYN: $(ASYN))
+endif
+ifeq ($(wildcard $(BUSY)/lib),)
+$(error Invalid BUSY: $(BUSY))
+endif
+ifeq ($(wildcard $(USB_SN)/lib),)
+$(error Invalid USB_SN: $(USB_SN))
+endif

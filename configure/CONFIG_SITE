@@ -13,7 +13,7 @@
 # that Base is built for.
 #CROSS_COMPILER_TARGET_ARCHS = RTEMS-beatnik
 #CROSS_COMPILER_TARGET_ARCHS = linux-x86
-CROSS_COMPILER_TARGET_ARCHS = linux-x86
+#CROSS_COMPILER_TARGET_ARCHS = linux-x86
 BUILD_FOR_HOST_ARCH = 1
 
 # Set this when your IOC and the host use different paths

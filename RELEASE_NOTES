@@ -1,0 +1,26 @@
+#
+# RELEASE_NOTES
+#
+R1.0.6	2017-05-10, Bruce Hill
+	Updated for git workflow and latest modules
+
+R1.0.5	2016-08-09 Scott A. Stubbs
+	No longer autosaves .AXIS field
+
+R1.0.4	2016-07-01 Michael C. Browne
+	Use usb_sn module.
+
+R1.0.3	2016-06-30 Michael C. Browne
+	Bump to module versions, allow serial port connections.
+
+R1.0.2	2016-05-24 Scott A. Stubbs
+	Previously, if stage is disconnected and reconnected
+	the MMC-100 may change the feedback mode without the IOC knowing.
+	This update retrieves the feedback mode along with the status
+	bits to fix this. Tested in AMO!
+
+R1.0.1	2016-04-18 Abdullah Rashed Ahmed
+	Removed port from autosave
+
+R1.0.0	2016-04-15 Michael C. Browne
+	Baseline release.
