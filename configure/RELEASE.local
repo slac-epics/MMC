@@ -14,9 +14,9 @@
 # ==========================================================
 # Define the version strings for all needed modules
 # ==========================================================
-ASYN_MODULE_VERSION     = R4.30-1.1.1
-BUSY_MODULE_VERSION     = R1.6.1-0.2.2
-USB_SN_MODULE_VERSION    = R1.0.2
+ASYN_MODULE_VERSION     = R4.31-1.0.0
+BUSY_MODULE_VERSION     = R1.6.1-0.2.5
+USB_SN_MODULE_VERSION    = R1.0.3
 
 # ==========================================================
 # External Support module path definitions

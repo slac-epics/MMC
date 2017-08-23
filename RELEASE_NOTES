@@ -1,6 +1,9 @@
 #
 # RELEASE_NOTES
 #
+R1.0.7	2017-08-23 Scott A. Stubbs
+	Bumped to latest modules
+
 R1.0.6	2017-05-10, Bruce Hill
 	Updated for git workflow and latest modules
 
