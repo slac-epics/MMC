@@ -1,8 +1,8 @@
 #
 # RELEASE_NOTES
 #
-R1.0.9 2026-04-20 Jane Liu
-    Removed $(MOTOR).RVAL and $(MOTOR).RBV from autosave and archive 
+R1.0.9	2026-04-20 Jane Liu
+	Removed $(MOTOR).RVAL and $(MOTOR).RBV from autosave and archive
 	templates. They are not used in this module or in the IOC.
 	Replaced the EPICS_NAME variable (used in RHEL 5) with IOCNAME.
 
