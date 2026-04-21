@@ -36,8 +36,6 @@ $(MOTOR).SDS          86400    monitor
 
 $(MOTOR).VAL          2        monitor
 $(MOTOR).DVAL         2        monitor
-$(MOTOR).RVAL         2        monitor
-$(MOTOR).RRBV         0.2      monitor
 $(MOTOR).DRBV         0.2      monitor
 $(MOTOR).RBV          0.2      monitor
 $(MOTOR).VRT          0.2      monitor

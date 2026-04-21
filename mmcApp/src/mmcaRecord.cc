@@ -151,7 +151,7 @@ static long init_record( dbCommon *precord, int pass )
     prec->dpvt     = mInfo;
 
     gethostname( prec->host, 60                   );
-    strcpy     ( prec->iocn, getenv("EPICS_NAME") );
+    strcpy     ( prec->iocn, getenv("IOCNAME") );
 
     epicsThreadCreate( prec->name, epicsThreadPriorityMedium,
                        epicsThreadGetStackSize(epicsThreadStackMedium),
