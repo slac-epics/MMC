@@ -1,6 +1,11 @@
 #
 # RELEASE_NOTES
 #
+R1.0.9	2026-04-20 Jane Liu
+	Removed $(MOTOR).RVAL and $(MOTOR).RBV from autosave and archive
+	templates. They are not used in this module or in the IOC.
+	Replaced the EPICS_NAME variable (used in RHEL 5) with IOCNAME.
+
 R1.0.8	2025-08-22 Jane Liu
 	Bump to module versions
 	Add an include file unistd.h to mmcaRecord.cc
